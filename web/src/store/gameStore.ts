@@ -62,10 +62,15 @@ interface GameStore {
   setBoardSide(side: BoardSide): void
   toggleSound(): void
   useCharacter(characterId: string): void
+  unuseCharacter(characterId: string): void
   nextRound(): void
   redeal(): void
   theme: string
   setTheme(theme: string): void
+  leaveRoom(): void
+  endRoom(): void
+  adjustScore(playerId: string, delta: number): void
+  resetScores(): void
 }
 
 let initialized = false
@@ -147,6 +152,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       case 'error':
         set({ error: payload.message ?? '发生错误' })
         break
+      case 'room:closed':
+        resetLocal()
+        notify('房间已结束')
+        break
       default:
         break
     }
@@ -159,6 +168,21 @@ export const useGameStore = create<GameStore>((set, get) => {
       window.clearTimeout(noticeTimer)
     }
     noticeTimer = window.setTimeout(() => set({ notice: null }), 2500)
+  }
+
+  function resetLocal(): void {
+    set({
+      joined: false,
+      state: null,
+      roomCode: null,
+      playerId: null,
+      draggingRemote: {},
+      diceHistory: [],
+      lastDice: null,
+      selectedPieceId: null,
+      paintMode: false,
+      armedColor: null,
+    })
   }
 
   return {
@@ -254,6 +278,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       socket.send('chara:use', { characterId })
     },
 
+    unuseCharacter(characterId) {
+      socket.send('chara:unuse', { characterId })
+    },
+
     nextRound() {
       socket.send('room:nextRound')
     },
@@ -267,6 +295,23 @@ export const useGameStore = create<GameStore>((set, get) => {
     setTheme(theme) {
       localStorage.setItem('ma_theme', theme)
       set({ theme })
+    },
+
+    leaveRoom() {
+      socket.send('room:leave')
+      resetLocal()
+    },
+
+    endRoom() {
+      socket.send('room:end')
+    },
+
+    adjustScore(playerId, delta) {
+      socket.send('score:adjust', { playerId, delta })
+    },
+
+    resetScores() {
+      socket.send('score:reset')
     },
   }
 })

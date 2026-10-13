@@ -19,6 +19,7 @@ public class Player {
     private final List<String> characters = new ArrayList<>();
     private final Set<String> usedCharacters = new LinkedHashSet<>();
     private volatile String activeCharacterId;
+    private volatile int score;
 
     public Player(String id, String token, String name, String color) {
         this.id = id;
@@ -68,10 +69,30 @@ public class Player {
         return activeCharacterId;
     }
 
+    public int getScore() {
+        return score;
+    }
+
+    public void addScore(int delta) {
+        this.score += delta;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
+
     /** 标记本轮使用某角色（同时记入已用集合）。 */
     public void useCharacter(String characterId) {
         usedCharacters.add(characterId);
         activeCharacterId = characterId;
+    }
+
+    /** 取消使用某角色（回退）：从已用集合移除；若为当前使用则清空。 */
+    public void unuseCharacter(String characterId) {
+        usedCharacters.remove(characterId);
+        if (characterId.equals(activeCharacterId)) {
+            activeCharacterId = null;
+        }
     }
 
     /** 清空角色手牌与使用状态（用于重新发牌）。 */

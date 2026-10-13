@@ -11,6 +11,8 @@ export interface PlayerView {
   usedCharacters: string[]
   /** 本轮正在使用的角色 id。 */
   activeCharacterId: string | null
+  /** 当前分数。 */
+  score: number
 }
 
 export interface CharacterInfo {

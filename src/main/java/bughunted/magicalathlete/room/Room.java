@@ -81,6 +81,13 @@ public class Room {
         return players.get(id);
     }
 
+    /** 移除玩家及其所有棋子（退出房间）。 */
+    public synchronized void removePlayer(String playerId) {
+        if (players.remove(playerId) != null) {
+            pieces.values().removeIf(piece -> piece.getOwnerId().equals(playerId));
+        }
+    }
+
     public synchronized boolean isEmpty() {
         return players.isEmpty();
     }

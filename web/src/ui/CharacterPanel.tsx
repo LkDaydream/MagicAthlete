@@ -6,6 +6,7 @@ export function CharacterPanel() {
   const state = useGameStore((s) => s.state)
   const myId = useGameStore((s) => s.playerId)
   const useCharacter = useGameStore((s) => s.useCharacter)
+  const unuseCharacter = useGameStore((s) => s.unuseCharacter)
   const nextRound = useGameStore((s) => s.nextRound)
   const redeal = useGameStore((s) => s.redeal)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -39,10 +40,15 @@ export function CharacterPanel() {
             <div key={cid} className={`char-card${active ? ' active' : ''}${used && !active ? ' used' : ''}`}>
               <div className="char-name">{nameOf(cid)}</div>
               <div className="char-skill">{skillOf(cid)}</div>
-              {active ? (
-                <div className="char-flag">本轮使用中</div>
-              ) : used ? (
-                <div className="char-flag muted">已用</div>
+              {used ? (
+                <div className="char-used-row">
+                  <span className={`char-flag${active ? '' : ' muted'}`}>
+                    {active ? '本轮使用中' : '已用'}
+                  </span>
+                  <button className="char-undo" onClick={() => unuseCharacter(cid)}>
+                    撤销
+                  </button>
+                </div>
               ) : (
                 <button className="char-use" onClick={() => useCharacter(cid)}>
                   本轮使用

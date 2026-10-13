@@ -2,8 +2,11 @@ import { useGameStore } from '../store/gameStore'
 import { Board } from './Board'
 import { CharacterPanel } from './CharacterPanel'
 import { DicePanel } from './DicePanel'
+import { Glossary } from './Glossary'
 import { PlayerList } from './PlayerList'
+import { RacersBar } from './RacersBar'
 import { RoomInfo } from './RoomInfo'
+import { Scoreboard } from './Scoreboard'
 import { ThemeSwitcher } from './ThemeSwitcher'
 import { Toolbar } from './Toolbar'
 
@@ -41,6 +44,7 @@ export function Room() {
               <span className="dot" style={{ background: player.color }} />
               <span className="rb-name">{player.name}</span>
               <span className={`rb-char${active ? '' : ' empty'}`}>{active || '未选'}</span>
+              <span className="rb-score">{player.score}</span>
             </div>
           )
         })}
@@ -48,18 +52,21 @@ export function Room() {
 
       <main className="room-body">
         <aside className="rail rail-left">
+          <Scoreboard />
           <PlayerList />
           <CharacterPanel />
         </aside>
 
         <div className="board-area">
           <Board />
+          <RacersBar />
         </div>
 
         <aside className="rail rail-right">
           <DicePanel />
           <Toolbar />
           <RoomInfo />
+          <Glossary />
         </aside>
       </main>
     </div>

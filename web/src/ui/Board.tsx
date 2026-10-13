@@ -57,6 +57,7 @@ export function Board() {
 
   const [config, setConfig] = useState<TrackConfig | null>(null)
   const [localDrag, setLocalDrag] = useState<{ pieceId: string; x: number; y: number } | null>(null)
+  const [hoverId, setHoverId] = useState<string | null>(null)
   const [scale, setScale] = useState(1)
   const wrapRef = useRef<HTMLDivElement>(null)
   const boardRef = useRef<HTMLDivElement>(null)
@@ -112,7 +113,7 @@ export function Board() {
       if (!cell) continue
       const count = list.length
       list.forEach((piece, index) => {
-        const offset = count > 1 ? index * 12 - (count - 1) * 6 : 0
+        const offset = count > 1 ? index * 14 - (count - 1) * 7 : 0
         positions.set(piece.id, { x: cell.x + offset, y: cell.y + offset, z: index + 1 })
       })
     }
@@ -207,6 +208,9 @@ export function Board() {
       z = position.z
     }
     const locked = Boolean(piece.lockedBy) && piece.lockedBy !== myId
+    if (!dragging && piece.id === hoverId) {
+      z = 998
+    }
     return (
       <Piece
         key={piece.id}
@@ -218,6 +222,7 @@ export function Board() {
         dragging={dragging}
         selected={selectedPieceId === piece.id}
         locked={locked}
+        onHover={setHoverId}
         onPointerDown={(event) => beginDrag(event, piece)}
       />
     )

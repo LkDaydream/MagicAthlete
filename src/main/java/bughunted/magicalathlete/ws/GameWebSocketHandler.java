@@ -92,8 +92,13 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             case "move:undo" -> onUndo(session);
             case "room:reset" -> onReset(session);
             case "chara:use" -> onUseCharacter(session, payload);
+            case "chara:unuse" -> onUnuseCharacter(session, payload);
             case "room:nextRound" -> onNextRound(session);
             case "room:redeal" -> onRedeal(session);
+            case "room:leave" -> onLeave(session);
+            case "room:end" -> onEnd(session);
+            case "score:adjust" -> onScoreAdjust(session, payload);
+            case "score:reset" -> onScoreReset(session);
             default -> {
                 // 未知消息忽略
             }
@@ -354,6 +359,25 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         broadcastState(room);
     }
 
+    /** 取消使用角色（回退误触）。 */
+    private void onUnuseCharacter(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        Player player = room.getPlayer(membership.playerId());
+        if (player == null) {
+            return;
+        }
+        String characterId = payload.path("characterId").asText("");
+        if (!player.getCharacters().contains(characterId)) {
+            return;
+        }
+        player.unuseCharacter(characterId);
+        broadcastState(room);
+    }
+
     private void onNextRound(WebSocketSession session) {
         Membership membership = memberships.get(session.getId());
         Room room = room(membership);
@@ -375,6 +399,79 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         for (Player player : room.getPlayers()) {
             player.resetCharacters();
             player.getCharacters().addAll(room.deal(CHARACTERS_PER_PLAYER));
+        }
+        broadcastState(room);
+    }
+
+    // ------------------------------------------------------- leave / end
+
+    /** 玩家主动退出：从房间剔除该玩家及其棋子；房间空则销毁。 */
+    private void onLeave(WebSocketSession session) {
+        Membership membership = memberships.remove(session.getId());
+        if (membership == null) {
+            return;
+        }
+        Room room = rooms.get(membership.roomCode());
+        if (room == null) {
+            return;
+        }
+        Set<WebSocketSession> set = roomSessions.get(room.getCode());
+        if (set != null) {
+            set.removeIf(s -> s.getId().equals(session.getId()));
+        }
+        room.removePlayer(membership.playerId());
+        if (room.isEmpty()) {
+            roomSessions.remove(room.getCode());
+            rooms.remove(room);
+        } else {
+            broadcastState(room);
+        }
+    }
+
+    /** 结束房间：销毁房间，并通知房间内所有人。 */
+    private void onEnd(WebSocketSession session) {
+        Membership membership = memberships.get(session.getId());
+        if (membership == null) {
+            return;
+        }
+        Room room = rooms.get(membership.roomCode());
+        if (room == null) {
+            return;
+        }
+        Set<WebSocketSession> set = roomSessions.remove(room.getCode());
+        rooms.remove(room);
+        if (set != null) {
+            for (WebSocketSession s : set) {
+                memberships.remove(s.getId());
+                send(s, "room:closed", Map.of());
+            }
+        }
+    }
+
+    // --------------------------------------------------------------- score
+
+    private void onScoreAdjust(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        Player player = room.getPlayer(payload.path("playerId").asText(""));
+        if (player == null) {
+            return;
+        }
+        player.addScore(payload.path("delta").asInt(0));
+        broadcastState(room);
+    }
+
+    private void onScoreReset(WebSocketSession session) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        for (Player player : room.getPlayers()) {
+            player.setScore(0);
         }
         broadcastState(room);
     }
@@ -450,6 +547,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             pv.put("characters", new ArrayList<>(p.getCharacters()));
             pv.put("usedCharacters", new ArrayList<>(p.getUsedCharacters()));
             pv.put("activeCharacterId", p.getActiveCharacterId());
+            pv.put("score", p.getScore());
             players.add(pv);
         }
         view.put("players", players);

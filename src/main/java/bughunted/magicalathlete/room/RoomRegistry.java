@@ -39,6 +39,13 @@ public class RoomRegistry {
         }
     }
 
+    /** 无条件移除房间（结束房间）。 */
+    public void remove(Room room) {
+        if (room != null) {
+            rooms.remove(room.getCode());
+        }
+    }
+
     private String randomCode() {
         StringBuilder sb = new StringBuilder(4);
         for (int i = 0; i < 4; i++) {
