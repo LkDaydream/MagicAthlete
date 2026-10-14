@@ -1,4 +1,5 @@
-export type BoardSide = 'mild' | 'wild'
+export type BoardSide = 'mild' | 'wild' | 'twisty' | 'whirly'
+export type CharacterSet = 'gen1' | 'gen2' | 'mixed'
 
 export interface PlayerView {
   id: string
@@ -29,11 +30,16 @@ export interface PieceView {
   x: number | null
   y: number | null
   lockedBy: string | null
+  /** 自定义显示名（NPC）。 */
+  label?: string | null
+  /** 自定义颜色（NPC）。 */
+  color?: string | null
 }
 
 export interface RoomState {
   roomCode: string
   boardSide: BoardSide
+  characterSet: CharacterSet
   piecesPerPlayer: number
   round: number
   players: PlayerView[]

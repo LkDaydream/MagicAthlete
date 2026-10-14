@@ -12,6 +12,10 @@ public class Piece {
     private volatile Double x;
     private volatile Double y;
     private volatile String lockedBy;
+    /** 自定义显示名（NPC 名称；为空则用所属玩家名）。 */
+    private volatile String label;
+    /** 自定义颜色（NPC 颜色；为空则用所属玩家颜色）。 */
+    private volatile String color;
 
     public Piece(String id, String ownerId, int cell) {
         this.id = id;
@@ -54,6 +58,22 @@ public class Piece {
 
     public void setLockedBy(String lockedBy) {
         this.lockedBy = lockedBy;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     /** 落子：固定到某格并清除拖动中的临时坐标与锁。 */

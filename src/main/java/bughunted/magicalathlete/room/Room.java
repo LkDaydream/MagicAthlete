@@ -26,6 +26,7 @@ public class Room {
     private final Deque<String> deck = new ArrayDeque<>();
 
     private volatile String boardSide = "mild";
+    private volatile String characterSet = "mixed";
     private volatile int piecesPerPlayer = 1;
     private volatile int round = 1;
 
@@ -43,6 +44,14 @@ public class Room {
 
     public void setBoardSide(String boardSide) {
         this.boardSide = boardSide;
+    }
+
+    public String getCharacterSet() {
+        return characterSet;
+    }
+
+    public void setCharacterSet(String characterSet) {
+        this.characterSet = characterSet;
     }
 
     public int getPiecesPerPlayer() {
@@ -106,6 +115,10 @@ public class Room {
 
     public Piece getPiece(String id) {
         return pieces.get(id);
+    }
+
+    public void removePiece(String id) {
+        pieces.remove(id);
     }
 
     public Collection<Piece> getPieceList() {

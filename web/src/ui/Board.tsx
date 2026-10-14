@@ -23,6 +23,8 @@ const DRAG_SEND_INTERVAL = 33 // ms，约 30Hz
 function specialIcon(type: string): string | null {
   if (type === 'STAR') return '★'
   if (type === 'TRIP') return '✖'
+  if (type === 'TWIST') return '扭'
+  if (type === 'SPIRAL') return '螺'
   const fwd = /^FWD(\d+)$/.exec(type)
   if (fwd) return `➡${fwd[1]}`
   const back = /^BACK(\d+)$/.exec(type)
@@ -39,6 +41,8 @@ function cellFill(type: string): string {
   if (type === 'FINISH') return 'var(--cell-finish)'
   if (type === 'STAR') return 'var(--cell-star)'
   if (type === 'TRIP') return 'var(--cell-trip)'
+  if (type === 'TWIST') return 'var(--cell-twist, #b39ddb)'
+  if (type === 'SPIRAL') return 'var(--cell-spiral, #7fd1e0)'
   if (type.startsWith('FWD')) return 'var(--cell-fwd)'
   if (type.startsWith('BACK')) return 'var(--cell-back)'
   return 'var(--cell-normal)'
@@ -265,6 +269,8 @@ export function Board() {
             const custom = state?.cellColors?.[String(cell.index)]
             const count = stacking.counts.get(cell.index) ?? 0
             const icon = specialIcon(cell.type)
+            const fwd = /^FWD(\d+)$/.exec(cell.type)
+            const back = /^BACK(\d+)$/.exec(cell.type)
             return (
               <g
                 key={cell.index}
@@ -289,13 +295,29 @@ export function Board() {
                 )}
                 {cell.type === 'FINISH' && (
                   <text className="cell-tag" x={cell.x} y={cell.y + 26} textAnchor="middle">
-                    FINISH
+                    终点
                   </text>
                 )}
-                {icon && (
+                {icon && !fwd && !back && (
                   <text className="cell-icon" x={cell.x} y={cell.y - 20} textAnchor="middle">
                     {icon}
                   </text>
+                )}
+                {(fwd || back) && (
+                  <>
+                    <text
+                      className="cell-icon"
+                      x={cell.x - 12}
+                      y={cell.y - 20}
+                      textAnchor="middle"
+                      transform={`rotate(${(cell.dir ?? 0) + (back ? 180 : 0)} ${cell.x - 12} ${cell.y - 20})`}
+                    >
+                      ➡
+                    </text>
+                    <text className="cell-amount" x={cell.x + 14} y={cell.y - 20} textAnchor="middle">
+                      {fwd?.[1] ?? back?.[1]}
+                    </text>
+                  </>
                 )}
                 {count > 1 && (
                   <text className="cell-count" x={cell.x + half - 14} y={cell.y - half + 20} textAnchor="middle">
@@ -303,6 +325,35 @@ export function Board() {
                   </text>
                 )}
               </g>
+            )
+          })}
+          {layout.links?.map((link, i) => {
+            const mx = (link.a.x + link.b.x) / 2
+            const my = (link.a.y + link.b.y) / 2
+            const dx = mx - layout.width / 2
+            const dy = my - layout.height / 2
+            const len = Math.hypot(dx, dy) || 1
+            const bulge = Math.min(220, Math.max(140, len * 0.5))
+            const px = mx - (dx / len) * bulge
+            const py = my - (dy / len) * bulge
+            // 从格子“边框”出发（朝弧线内凹方向），避免连线压住格子
+            const edgePoint = (cx: number, cy: number) => {
+              const ex = px - cx
+              const ey = py - cy
+              const el = Math.hypot(ex, ey) || 1
+              const ux = ex / el
+              const uy = ey / el
+              const t = half / Math.max(Math.abs(ux), Math.abs(uy))
+              return { x: cx + ux * t, y: cy + uy * t }
+            }
+            const a = edgePoint(link.a.x, link.a.y)
+            const b = edgePoint(link.b.x, link.b.y)
+            return (
+              <path
+                key={`spiral-${i}`}
+                className="spiral-link"
+                d={`M ${a.x} ${a.y} Q ${px} ${py} ${b.x} ${b.y}`}
+              />
             )
           })}
         </svg>

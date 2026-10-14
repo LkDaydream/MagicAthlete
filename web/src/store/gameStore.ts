@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { GameSocket } from '../net/GameSocket'
-import type { BoardSide, Envelope, PieceView, RoomState } from '../protocol/messages'
+import type { BoardSide, CharacterSet, Envelope, PieceView, RoomState } from '../protocol/messages'
 
 const ERASE = '__erase__'
 
@@ -43,6 +43,14 @@ interface GameStore {
   draggingRemote: Record<string, { x: number; y: number }>
   diceHistory: DiceRoll[]
   lastDice: DiceRoll | null
+  /** 最近抽到的扭扭卡（索引）；null 表示无。 */
+  twistCard: { index: number; byPlayer: string } | null
+  /** 扭扭卡揭示弹窗是否打开（关闭后仍保留当前卡）。 */
+  twistModalOpen: boolean
+  /** 扭扭卡是否处于“抽取动画中”（期间不剧透结果）。 */
+  twistRevealing: boolean
+  /** 各玩家最近一次掷骰点数。 */
+  lastRolls: Record<string, number>
   paintMode: boolean
   armedColor: string | null
   selectedPieceId: string | null
@@ -50,7 +58,8 @@ interface GameStore {
   notice: string | null
 
   init(): void
-  join(roomCode: string, name: string, piecesPerPlayer: number): void
+  join(roomCode: string, name: string, piecesPerPlayer: number, characterSet: CharacterSet): void
+  setCharacterSet(set: CharacterSet): void
   send(type: string, payload?: unknown): void
   setPaintMode(on: boolean): void
   setArmedColor(color: string | null): void
@@ -60,6 +69,10 @@ interface GameStore {
   resetRoom(): void
   undoTurn(): void
   setBoardSide(side: BoardSide): void
+  drawTwist(): void
+  closeTwist(): void
+  addPiece(npc?: boolean, name?: string, color?: string): void
+  removePiece(pieceId: string): void
   toggleSound(): void
   useCharacter(characterId: string): void
   unuseCharacter(characterId: string): void
@@ -146,9 +159,18 @@ export const useGameStore = create<GameStore>((set, get) => {
           seq: message.seq,
           at: Date.now(),
         }
-        set({ lastDice: roll, diceHistory: [roll, ...get().diceHistory].slice(0, 30) })
+        set({
+          lastDice: roll,
+          diceHistory: [roll, ...get().diceHistory].slice(0, 30),
+          lastRolls: { ...get().lastRolls, [payload.playerId]: payload.value },
+        })
         break
       }
+      case 'twist:drawn':
+        set({ twistCard: { index: payload.index, byPlayer: payload.byPlayer }, twistModalOpen: true, twistRevealing: true })
+        if (twistTimer) window.clearTimeout(twistTimer)
+        twistTimer = window.setTimeout(() => set({ twistRevealing: false }), 1200)
+        break
       case 'error':
         set({ error: payload.message ?? '发生错误' })
         break
@@ -161,6 +183,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     }
   }
 
+  let twistTimer: number | null = null
   let noticeTimer: number | null = null
   function notify(text: string): void {
     set({ notice: text })
@@ -179,6 +202,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       draggingRemote: {},
       diceHistory: [],
       lastDice: null,
+      twistCard: null,
+      twistModalOpen: false,
+      twistRevealing: false,
+      lastRolls: {},
       selectedPieceId: null,
       paintMode: false,
       armedColor: null,
@@ -196,6 +223,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     draggingRemote: {},
     diceHistory: [],
     lastDice: null,
+    twistCard: null,
+    twistModalOpen: false,
+    twistRevealing: false,
+    lastRolls: {},
     paintMode: false,
     armedColor: null,
     selectedPieceId: null,
@@ -220,13 +251,14 @@ export const useGameStore = create<GameStore>((set, get) => {
       socket.connect()
     },
 
-    join(roomCode, name, piecesPerPlayer) {
+    join(roomCode, name, piecesPerPlayer, characterSet) {
       set({ playerName: name, error: null })
       socket.send('room:join', {
         token: loadToken(),
         roomCode: roomCode.trim().toUpperCase(),
         playerName: name,
         piecesPerPlayer,
+        characterSet,
       })
     },
 
@@ -266,6 +298,26 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     setBoardSide(side) {
       socket.send('board:side', { side })
+    },
+
+    setCharacterSet(set) {
+      socket.send('chara:set', { set })
+    },
+
+    drawTwist() {
+      socket.send('twist:draw')
+    },
+
+    closeTwist() {
+      set({ twistModalOpen: false })
+    },
+
+    addPiece(npc, name, color) {
+      socket.send('piece:add', { npc: Boolean(npc), name, color })
+    },
+
+    removePiece(pieceId) {
+      socket.send('piece:remove', { pieceId })
     },
 
     toggleSound() {

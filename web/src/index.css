@@ -688,6 +688,15 @@ button.link {
   min-height: 16px;
 }
 
+/* 竖版掷骰面板：提示与按钮居中 */
+.dice-stack .dice-info {
+  text-align: center;
+}
+
+.dice-stack > button.primary {
+  width: 100%;
+}
+
 /* 调色盘 */
 
 .palette {
@@ -907,6 +916,16 @@ button.link {
   border: 2px solid var(--piece-ring);
 }
 
+.char-set {
+  padding: 5px 6px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .char-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1004,6 +1023,12 @@ button.link {
 
 .cell-count {
   font-size: 12px;
+  font-weight: 800;
+  fill: var(--cell-ink);
+}
+
+.cell-amount {
+  font-size: 16px;
   font-weight: 800;
   fill: var(--cell-ink);
 }
@@ -1329,6 +1354,195 @@ button.link {
   color: var(--ink);
 }
 
+/* 扭扭卡 */
+.twist-modal {
+  max-width: 460px;
+}
+
+.twist-card {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffd08a, #ff9f6b);
+  border: 2px solid #d9822b;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+}
+
+.twist-card-name {
+  font-size: 20px;
+  font-weight: 900;
+  color: #5a2d00;
+}
+
+.twist-card-en {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a5a20;
+  margin-bottom: 10px;
+}
+
+.twist-card-effect {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #3a1e00;
+}
+
+@keyframes twistFlip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.twist-card.twist-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 108px;
+  background: repeating-linear-gradient(45deg, #7b4bbf, #7b4bbf 12px, #6a3ba8 12px, #6a3ba8 24px);
+  border-color: #5a2f96;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  animation: twistFlip 0.9s linear infinite;
+}
+
+.twist-rolling {
+  animation: none;
+  transform: none;
+}
+
+.twist-panel {
+  padding: 10px 12px;
+}
+
+.twist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.twist-head h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.twist-draw {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--btn-shadow);
+}
+
+.twist-empty {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.lookup-modal {
+  max-width: 660px;
+}
+
+.lookup-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--panel-bg);
+  outline: none;
+}
+
+.lookup-input:focus {
+  border-color: var(--accent);
+}
+
+.lookup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lookup-row {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-bg);
+}
+
+.lookup-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.lookup-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.lookup-en {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.lookup-skill {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.lookup-empty {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.rules-modal {
+  max-width: 640px;
+}
+
+.rules-list section {
+  margin-bottom: 16px;
+}
+
+.rules-list h4 {
+  margin: 0 0 6px;
+  padding-bottom: 4px;
+  font-size: 14px;
+  color: var(--accent);
+  border-bottom: 1px dashed var(--line);
+}
+
+.rules-list ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rules-list li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
 .glossary-list {
   margin: 0;
   display: flex;
@@ -1362,6 +1576,14 @@ button.link {
   letter-spacing: 6px;
   fill: var(--cell-ink);
   opacity: 0.12;
+}
+
+.spiral-link {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 7;
+  stroke-linecap: round;
+  opacity: 0.85;
 }
 
 .board-caption {

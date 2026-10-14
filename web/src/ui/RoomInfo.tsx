@@ -1,4 +1,12 @@
 import { useGameStore } from '../store/gameStore'
+import type { BoardSide } from '../protocol/messages'
+
+const SIDE_LABEL: Record<BoardSide, string> = {
+  mild: '温和',
+  wild: '狂野',
+  twisty: '扭扭',
+  whirly: '螺旋世界',
+}
 
 /** 房间信息：「平铺」在 header 里展示（不占侧栏）。 */
 export function RoomInfo() {
@@ -13,7 +21,7 @@ export function RoomInfo() {
         每人棋子 <b>{piecesPerPlayer}</b>
       </span>
       <span className="stat">
-        赛道 <b>{boardSide === 'mild' ? '温和' : '狂野'}</b>
+        赛道 <b>{SIDE_LABEL[boardSide]}</b>
       </span>
       <span className="stat">
         在线 <b>{players.filter((p) => p.connected).length}/{players.length}</b>

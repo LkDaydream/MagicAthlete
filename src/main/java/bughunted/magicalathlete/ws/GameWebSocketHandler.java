@@ -84,6 +84,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         switch (type) {
             case "room:join" -> onJoin(session, payload);
             case "board:side" -> onBoardSide(session, payload);
+            case "twist:draw" -> onTwistDraw(session);
+            case "piece:add" -> onPieceAdd(session, payload);
+            case "piece:remove" -> onPieceRemove(session, payload);
             case "cell:color" -> onCellColor(session, payload);
             case "drag:start" -> onDragStart(session, payload);
             case "drag:move" -> onDragMove(session, payload);
@@ -95,6 +98,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             case "chara:unuse" -> onUnuseCharacter(session, payload);
             case "room:nextRound" -> onNextRound(session);
             case "room:redeal" -> onRedeal(session);
+            case "chara:set" -> onCharaSet(session, payload);
             case "room:leave" -> onLeave(session);
             case "room:end" -> onEnd(session);
             case "score:adjust" -> onScoreAdjust(session, payload);
@@ -145,12 +149,14 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             playerName = "Player";
         }
         int piecesPerPlayer = Math.max(1, Math.min(4, payload.path("piecesPerPlayer").asInt(1)));
+        String characterSet = normalizeSet(payload.path("characterSet").asText("mixed"));
 
         Room room;
         if (roomCode.isEmpty()) {
             room = rooms.createRoom();
             room.setPiecesPerPlayer(piecesPerPlayer);
-            room.setDeck(catalog.shuffledIds(random));
+            room.setCharacterSet(characterSet);
+            room.setDeck(catalog.shuffledIds(random, characterSet));
         } else {
             room = rooms.get(roomCode);
             if (room == null) {
@@ -194,11 +200,59 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             return;
         }
         String side = payload.path("side").asText("mild");
-        if (!side.equals("mild") && !side.equals("wild")) {
+        if (!side.equals("mild") && !side.equals("wild") && !side.equals("twisty") && !side.equals("whirly")) {
             side = "mild";
         }
         room.setBoardSide(side);
         broadcast(room, "board:side", Map.of("side", side));
+    }
+
+    /** NPC 棋子归属标识（不属于任何真人玩家，任何人都可拖动）。 */
+    private static final String NPC_OWNER = "__npc__";
+
+    /** 新增一枚棋子（对应某些角色/扭扭卡会在场上增加可操控角色或 NPC）。 */
+    private void onPieceAdd(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        boolean npc = payload.path("npc").asBoolean(false);
+        String ownerId = npc ? NPC_OWNER : membership.playerId();
+        String id = "piece-" + ownerId + "-x" + System.nanoTime();
+        Piece piece = room.addPiece(id, ownerId, 0);
+        if (npc) {
+            String name = payload.path("name").asText("");
+            String color = payload.path("color").asText("");
+            piece.setLabel(name.isEmpty() ? "NPC" : name);
+            piece.setColor(color.isEmpty() ? nextNpcColor(room) : color);
+        }
+        broadcastState(room);
+    }
+
+    /** 移除一枚棋子。 */
+    private void onPieceRemove(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        room.removePiece(payload.path("pieceId").asText(""));
+        broadcastState(room);
+    }
+
+    /** 抽取一张扭扭卡：服务端随机决定索引，广播给所有人（保证大家看到同一张）。 */
+    private void onTwistDraw(WebSocketSession session) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        int index = random.nextInt(13);
+        Map<String, Object> msg = new HashMap<>();
+        msg.put("index", index);
+        msg.put("byPlayer", membership.playerId());
+        broadcast(room, "twist:drawn", msg);
     }
 
     private void onCellColor(WebSocketSession session, JsonNode payload) {
@@ -394,13 +448,39 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         if (room == null) {
             return;
         }
-        room.setDeck(catalog.shuffledIds(random));
+        room.setDeck(catalog.shuffledIds(random, room.getCharacterSet()));
         room.resetRound();
         for (Player player : room.getPlayers()) {
             player.resetCharacters();
             player.getCharacters().addAll(room.deal(CHARACTERS_PER_PLAYER));
         }
         broadcastState(room);
+    }
+
+    /** 切换角色池（gen1 / gen2 / mixed）并重新发牌。 */
+    private void onCharaSet(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        String set = normalizeSet(payload.path("set").asText("mixed"));
+        room.setCharacterSet(set);
+        room.setDeck(catalog.shuffledIds(random, set));
+        room.resetRound();
+        for (Player player : room.getPlayers()) {
+            player.resetCharacters();
+            player.getCharacters().addAll(room.deal(CHARACTERS_PER_PLAYER));
+        }
+        broadcastState(room);
+    }
+
+    /** 规整角色池取值。 */
+    private static String normalizeSet(String set) {
+        if ("gen1".equals(set) || "gen2".equals(set) || "mixed".equals(set)) {
+            return set;
+        }
+        return "mixed";
     }
 
     // ------------------------------------------------------- leave / end
@@ -536,6 +616,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         view.put("boardSide", room.getBoardSide());
         view.put("piecesPerPlayer", room.getPiecesPerPlayer());
         view.put("round", room.getRound());
+        view.put("characterSet", room.getCharacterSet());
 
         List<Map<String, Object>> players = new ArrayList<>();
         for (Player p : room.getPlayers()) {
@@ -561,6 +642,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             pv.put("x", piece.getX());
             pv.put("y", piece.getY());
             pv.put("lockedBy", piece.getLockedBy());
+            pv.put("label", piece.getLabel());
+            pv.put("color", piece.getColor());
             pieces.add(pv);
         }
         view.put("pieces", pieces);
@@ -586,6 +669,25 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
         view.put("characterInfo", characterInfo);
         return view;
+    }
+
+    private static final String[] NPC_COLORS = {
+        "#5c6b7a", "#8e6bbf", "#3aa6a0", "#c46b3a", "#7a8b3a", "#b0476b", "#3a5cc4", "#c4a13a"
+    };
+
+    private String nextNpcColor(Room room) {
+        Set<String> used = new HashSet<>();
+        for (Piece piece : room.getPieceList()) {
+            if (piece.getColor() != null) {
+                used.add(piece.getColor());
+            }
+        }
+        for (String candidate : NPC_COLORS) {
+            if (!used.contains(candidate)) {
+                return candidate;
+            }
+        }
+        return NPC_COLORS[room.getPieceList().size() % NPC_COLORS.length];
     }
 
     private String nextColor(Room room) {

@@ -1,15 +1,19 @@
 import { useGameStore } from '../store/gameStore'
 import { Board } from './Board'
 import { CharacterPanel } from './CharacterPanel'
+import { CharacterLookup } from './CharacterLookup'
 import { ConnBadge } from './ConnBadge'
 import { DicePanel } from './DicePanel'
 import { Glossary } from './Glossary'
 import { PlayerList } from './PlayerList'
 import { RacersBar } from './RacersBar'
 import { RoomInfo } from './RoomInfo'
+import { RulesModal } from './RulesModal'
 import { Scoreboard } from './Scoreboard'
 import { ThemeSwitcher } from './ThemeSwitcher'
 import { Toolbar } from './Toolbar'
+import { TwistPanel } from './TwistPanel'
+import { TwistReveal } from './TwistReveal'
 
 export function Room() {
   const roomCode = useGameStore((s) => s.state?.roomCode ?? '')
@@ -34,6 +38,8 @@ export function Room() {
         <RoomInfo />
         <div className="round-badge">第 {round} / 4 轮</div>
         <Glossary />
+        <RulesModal />
+        <CharacterLookup />
         <ThemeSwitcher />
         <ConnBadge />
       </header>
@@ -63,6 +69,7 @@ export function Room() {
         <div className="board-area">
           <Board />
           <RacersBar />
+          <TwistPanel />
           <Scoreboard />
         </div>
 
@@ -71,6 +78,7 @@ export function Room() {
           <Toolbar />
         </aside>
       </main>
+      <TwistReveal />
     </div>
   )
 }

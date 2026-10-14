@@ -63,7 +63,7 @@ export function DicePanel() {
   const shown = face ?? lastDice?.value ?? null
 
   return (
-    <div className="panel">
+    <div className="panel dice-stack">
       <h3>掷骰</h3>
       <div className="dice-stage">
         <Die value={shown} rolling={rolling} />

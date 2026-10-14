@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import type { CharacterSet } from '../protocol/messages'
 
 /** 角色面板：展示每名玩家分到的角色与其技能，并标记每轮使用的角色。 */
 export function CharacterPanel() {
@@ -9,6 +10,8 @@ export function CharacterPanel() {
   const unuseCharacter = useGameStore((s) => s.unuseCharacter)
   const nextRound = useGameStore((s) => s.nextRound)
   const redeal = useGameStore((s) => s.redeal)
+  const charSet = useGameStore((s) => s.state?.characterSet ?? 'mixed')
+  const setCharacterSet = useGameStore((s) => s.setCharacterSet)
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const players = state?.players ?? []
@@ -25,6 +28,16 @@ export function CharacterPanel() {
       <div className="char-head">
         <h3>我的角色</h3>
         <div className="char-head-actions">
+          <select
+            className="char-set"
+            value={charSet}
+            title="角色池（切换后会重新发牌）"
+            onChange={(event) => setCharacterSet(event.target.value as CharacterSet)}
+          >
+            <option value="gen1">一代</option>
+            <option value="gen2">二代</option>
+            <option value="mixed">混用</option>
+          </select>
           <button onClick={nextRound} disabled={round >= 4}>
             下一轮
           </button>

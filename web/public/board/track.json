@@ -28,6 +28,27 @@
         "24": "BACK2",
         "26": "TRIP"
       }
+    },
+    "twisty": {
+      "id": "twisty",
+      "name": "Twisty Twirl",
+      "special": {
+        "13": "TWIST",
+        "14": "TWIST"
+      }
+    },
+    "whirly": {
+      "id": "whirly",
+      "name": "Whirly World",
+      "special": {},
+      "links": [
+        [4, 6],
+        [8, 12],
+        [11, 15],
+        [17, 22],
+        [20, 23],
+        [24, 28]
+      ]
     }
   }
 }

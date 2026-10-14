@@ -1,11 +1,24 @@
 import { useGameStore } from '../store/gameStore'
+import type { BoardSide } from '../protocol/messages'
 
 const PALETTE = ['#f6d365', '#fda085', '#84fab0', '#a1c4fd', '#e0c3fc', '#ff9a9e']
 const ERASE = '__erase__'
 
+const SIDES: BoardSide[] = ['mild', 'wild', 'twisty', 'whirly']
+const SIDE_LABEL: Record<BoardSide, string> = {
+  mild: '温和面',
+  wild: '狂野面',
+  twisty: '扭扭赛道',
+  whirly: '螺旋世界',
+}
+const nextSide = (side: BoardSide): BoardSide => SIDES[(SIDES.indexOf(side) + 1) % SIDES.length]
+
 export function Toolbar() {
   const boardSide = useGameStore((s) => s.state?.boardSide ?? 'mild')
   const setBoardSide = useGameStore((s) => s.setBoardSide)
+  const addPiece = useGameStore((s) => s.addPiece)
+  const removePiece = useGameStore((s) => s.removePiece)
+  const selectedPieceId = useGameStore((s) => s.selectedPieceId)
   const resetRoom = useGameStore((s) => s.resetRoom)
   const undoTurn = useGameStore((s) => s.undoTurn)
   const paintMode = useGameStore((s) => s.paintMode)
@@ -21,8 +34,23 @@ export function Toolbar() {
     <div className="panel">
       <h3>操作</h3>
       <div className="row">
-        <button onClick={() => setBoardSide(boardSide === 'mild' ? 'wild' : 'mild')}>
-          赛道：{boardSide === 'mild' ? '温和面' : '狂野面'}
+        <button onClick={() => setBoardSide(nextSide(boardSide))}>赛道：{SIDE_LABEL[boardSide]}</button>
+      </div>
+      <div className="row">
+        <button onClick={() => addPiece(false)}>新增棋子</button>
+        <button
+          onClick={() => {
+            const name = window.prompt('NPC 名称', 'NPC')
+            if (name === null) return
+            addPiece(true, name.trim() || 'NPC')
+          }}
+        >
+          新增 NPC
+        </button>
+      </div>
+      <div className="row">
+        <button disabled={!selectedPieceId} onClick={() => selectedPieceId && removePiece(selectedPieceId)}>
+          移除选中棋子
         </button>
       </div>
       <div className="row">

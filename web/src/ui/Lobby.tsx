@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import type { CharacterSet } from '../protocol/messages'
 import { ConnBadge } from './ConnBadge'
 import { ThemeSwitcher } from './ThemeSwitcher'
 
@@ -9,6 +10,7 @@ export function Lobby() {
   const [name, setName] = useState(() => localStorage.getItem('ma_name') ?? '')
   const [code, setCode] = useState('')
   const [pieces, setPieces] = useState(1)
+  const [charSet, setCharSet] = useState<CharacterSet>('mixed')
 
   const start = () => {
     const finalName = name.trim() || 'Player'
@@ -16,7 +18,7 @@ export function Lobby() {
     if (mode === 'join' && !code.trim()) {
       return
     }
-    join(mode === 'join' ? code.trim() : '', finalName, pieces)
+    join(mode === 'join' ? code.trim() : '', finalName, pieces, charSet)
   }
 
   return (
@@ -65,6 +67,17 @@ export function Lobby() {
                 {n} 枚
               </option>
             ))}
+          </select>
+        </label>
+      )}
+
+      {mode === 'create' && (
+        <label>
+          <span>角色池</span>
+          <select value={charSet} onChange={(event) => setCharSet(event.target.value as CharacterSet)}>
+            <option value="gen1">一代角色（36）</option>
+            <option value="gen2">二代角色（36）</option>
+            <option value="mixed">混用（72）</option>
           </select>
         </label>
       )}

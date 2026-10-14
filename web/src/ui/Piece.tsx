@@ -16,6 +16,7 @@ interface Props {
 
 /** 单枚棋子：玩家颜色圆点 + 玩家名标签。 */
 export function Piece({ piece, player, x, y, z, dragging, selected, locked, onHover, onPointerDown }: Props) {
+  const isNpc = piece.ownerId === '__npc__'
   const classNames = ['piece']
   if (dragging) classNames.push('dragging')
   if (selected) classNames.push('selected')
@@ -32,10 +33,10 @@ export function Piece({ piece, player, x, y, z, dragging, selected, locked, onHo
       onPointerEnter={() => onHover(piece.id)}
       onPointerLeave={() => onHover(null)}
       onPointerDown={onPointerDown}
-      title={player?.name ?? piece.id}
+      title={piece.label ?? player?.name ?? piece.id}
     >
-      <div className="piece-dot" style={{ background: player?.color ?? '#888' }} />
-      <div className="piece-name">{player?.name ?? '?'}</div>
+      <div className="piece-dot" style={{ background: piece.color ?? player?.color ?? (isNpc ? '#5c6b7a' : '#888') }} />
+      <div className="piece-name">{piece.label ?? player?.name ?? (isNpc ? 'NPC' : '?')}</div>
     </div>
   )
 }

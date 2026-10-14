@@ -10,7 +10,7 @@ export interface TrackConfig {
   gap: number
   padding: number
   totalCells: number
-  boards: Record<string, { id: string; name: string; special: Record<string, string> }>
+  boards: Record<string, { id: string; name: string; special: Record<string, string>; links?: number[][] }>
 }
 
 export interface CellLayout {
@@ -26,6 +26,8 @@ export interface CellLayout {
   special: string | null
   /** 格宽（像素）；缺省为 cellSize。 */
   w?: number
+  /** 该格的行进方向（角度，度；0° 指向右，SVG 坐标 y 向下）。 */
+  dir?: number
 }
 
 export interface BoardLayout {
@@ -35,6 +37,8 @@ export interface BoardLayout {
   height: number
   cellSize: number
   cells: CellLayout[]
+  /** 螺旋世界的连通格对（用于画"环"）。 */
+  links?: { a: { x: number; y: number }; b: { x: number; y: number } }[]
 }
 
 /** 加载赛道布局配置（外置 JSON，便于照实体版图校准）。 */
@@ -82,8 +86,8 @@ export function buildLayout(config: TrackConfig, side: BoardSide): BoardLayout {
     let type = 'NORMAL'
     if (i === 0) {
       type = 'START'
-    } else if (i >= totalCells - 2) {
-      // 末尾两格 = 终点（第一名位 / 第二名位）
+    } else if (i === totalCells - 1) {
+      // 最后一格 = 终点
       type = 'FINISH'
     }
     const sp = special[String(i)] ?? null
@@ -93,13 +97,46 @@ export function buildLayout(config: TrackConfig, side: BoardSide): BoardLayout {
     cells.push({ index: i, row: g.row, col: g.col, x, y, type, special: sp, w: w === cellSize ? undefined : w })
   }
 
+  // 计算每格的「行进方向」（用于把前进/后退箭头旋转到正确朝向）
+  for (let i = 0; i < cells.length; i++) {
+    const prev = cells[i - 1]
+    const next = cells[i + 1]
+    let dx = 0
+    let dy = 0
+    if (prev && next) {
+      dx = next.x - prev.x
+      dy = next.y - prev.y
+    } else if (next) {
+      dx = next.x - cells[i].x
+      dy = next.y - cells[i].y
+    } else if (prev) {
+      dx = cells[i].x - prev.x
+      dy = cells[i].y - prev.y
+    }
+    cells[i].dir = Math.round((Math.atan2(dy, dx) * 180) / Math.PI)
+  }
+
+  // 螺旋世界：把连通格标为 SPIRAL，并记录连线（供渲染"环"）
+  const linksCfg = board?.links ?? []
+  for (const [a, b] of linksCfg) {
+    if (cells[a] && cells[a].type === 'NORMAL') cells[a].type = 'SPIRAL'
+    if (cells[b] && cells[b].type === 'NORMAL') cells[b].type = 'SPIRAL'
+  }
+  const links = linksCfg
+    .filter(([a, b]) => cells[a] && cells[b])
+    .map(([a, b]) => ({
+      a: { x: cells[a].x, y: cells[a].y },
+      b: { x: cells[b].x, y: cells[b].y },
+    }))
+
   return {
-    side: board?.id === 'wild' ? 'wild' : 'mild',
+    side: (board?.id ?? 'mild') as BoardSide,
     name: board?.name ?? '',
     width,
     height,
     cellSize,
     cells,
+    links,
   }
 }
 
