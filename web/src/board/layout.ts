@@ -1,7 +1,11 @@
 import type { BoardSide } from '../protocol/messages'
 
 export interface TrackConfig {
+  shape?: 'ring' | 'serpentine'
   columns: number
+  rows?: number
+  /** 起点占用几列（与实体版图一致，默认 1）。 */
+  startWidth?: number
   cellSize: number
   gap: number
   padding: number
@@ -20,10 +24,13 @@ export interface CellLayout {
   /** NORMAL | START | FINISH | ARROW_FWD | ARROW_BACK | STAR | TRIP */
   type: string
   special: string | null
+  /** 格宽（像素）；缺省为 cellSize。 */
+  w?: number
 }
 
 export interface BoardLayout {
   side: BoardSide
+  name: string
   width: number
   height: number
   cellSize: number
@@ -42,37 +49,58 @@ export async function loadTrackConfig(): Promise<TrackConfig> {
 }
 
 /**
- * 由紧凑配置计算网格坐标。采用「蛇形（boustrophedon）」排布：
- * 偶数行从左到右、奇数行从右到左，起点在 0、终点在最后一格。
+ * 生成赛道坐标：贴棋盘四边「开环环形」按**整数网格**铺格
+ * （顺时针 上→右→下→左）。起点占 startWidth 列（与实体一致），其余每格 1 列；
+ * 角落格严格落在四角 → 整圈对齐不歪。末尾两格为终点，与起点之间留缺口。
  */
 export function buildLayout(config: TrackConfig, side: BoardSide): BoardLayout {
   const board = config.boards[side] ?? config.boards[Object.keys(config.boards)[0]]
   const special = board?.special ?? {}
-  const { columns, cellSize, gap, padding, totalCells } = config
-  const rows = Math.ceil(totalCells / columns)
-  const width = padding * 2 + columns * cellSize + (columns - 1) * gap
+  const { cellSize, gap, padding, totalCells } = config
+  const cols = Math.max(2, config.columns)
+  const rows = Math.max(2, config.rows ?? 4)
+  const startCols = Math.max(1, config.startWidth ?? 1)
+
+  // 顺时针网格走位（span = 占几列；只有起点 > 1）
+  const walk: { col: number; row: number; span: number }[] = []
+  walk.push({ col: 0, row: 0, span: startCols }) // 起点
+  for (let c = startCols; c < cols; c++) walk.push({ col: c, row: 0, span: 1 }) // 上边
+  for (let r = 1; r < rows; r++) walk.push({ col: cols - 1, row: r, span: 1 }) // 右边
+  for (let c = cols - 2; c >= 0; c--) walk.push({ col: c, row: rows - 1, span: 1 }) // 下边
+  for (let r = rows - 2; r >= 1; r--) walk.push({ col: 0, row: r, span: 1 }) // 左边
+
+  const width = padding * 2 + cols * cellSize + (cols - 1) * gap
   const height = padding * 2 + rows * cellSize + (rows - 1) * gap
 
   const cells: CellLayout[] = []
-  for (let i = 0; i < totalCells; i++) {
-    const row = Math.floor(i / columns)
-    const col = row % 2 === 0 ? i % columns : columns - 1 - (i % columns)
-    const x = padding + col * (cellSize + gap) + cellSize / 2
-    const y = padding + row * (cellSize + gap) + cellSize / 2
+  const total = Math.min(totalCells, walk.length)
+  for (let i = 0; i < total; i++) {
+    const g = walk[i]
+    const w = g.span * cellSize + (g.span - 1) * gap
+    const x = padding + g.col * (cellSize + gap) + w / 2
+    const y = padding + g.row * (cellSize + gap) + cellSize / 2
     let type = 'NORMAL'
     if (i === 0) {
       type = 'START'
-    } else if (i === totalCells - 1) {
+    } else if (i >= totalCells - 2) {
+      // 末尾两格 = 终点（第一名位 / 第二名位）
       type = 'FINISH'
     }
     const sp = special[String(i)] ?? null
     if (sp) {
       type = sp
     }
-    cells.push({ index: i, row, col, x, y, type, special: sp })
+    cells.push({ index: i, row: g.row, col: g.col, x, y, type, special: sp, w: w === cellSize ? undefined : w })
   }
 
-  return { side: board?.id === 'wild' ? 'wild' : 'mild', width, height, cellSize, cells }
+  return {
+    side: board?.id === 'wild' ? 'wild' : 'mild',
+    name: board?.name ?? '',
+    width,
+    height,
+    cellSize,
+    cells,
+  }
 }
 
 /** 找到距离给定棋盘坐标最近的格号。 */

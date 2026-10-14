@@ -14,6 +14,8 @@ export function Toolbar() {
   const setPaintMode = useGameStore((s) => s.setPaintMode)
   const soundOn = useGameStore((s) => s.soundOn)
   const toggleSound = useGameStore((s) => s.toggleSound)
+  const leaveRoom = useGameStore((s) => s.leaveRoom)
+  const endRoom = useGameStore((s) => s.endRoom)
 
   return (
     <div className="panel">
@@ -60,6 +62,18 @@ export function Toolbar() {
           </button>
         </div>
       )}
+      <div className="row">
+        <button onClick={leaveRoom}>离开房间</button>
+        <button
+          onClick={() => {
+            if (window.confirm('确定结束房间？房间会被销毁，所有玩家都会被移出。')) {
+              endRoom()
+            }
+          }}
+        >
+          结束房间
+        </button>
+      </div>
     </div>
   )
 }

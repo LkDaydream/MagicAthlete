@@ -1,8 +1,11 @@
 {
-  "columns": 8,
+  "shape": "ring",
+  "columns": 15,
+  "rows": 4,
+  "startWidth": 3,
   "cellSize": 96,
-  "gap": 12,
-  "padding": 44,
+  "gap": 8,
+  "padding": 22,
   "totalCells": 31,
   "boards": {
     "mild": {

@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { Board } from './Board'
 import { CharacterPanel } from './CharacterPanel'
+import { ConnBadge } from './ConnBadge'
 import { DicePanel } from './DicePanel'
 import { Glossary } from './Glossary'
 import { PlayerList } from './PlayerList'
@@ -23,15 +24,18 @@ export function Room() {
   return (
     <div className="room">
       <header className="room-header">
-        <div className="brand">魔法运动员</div>
+        <div className="brand">魔法运动会</div>
         <div className="room-code">
           房间码 <b>{roomCode}</b>
           <button className="link" onClick={copy}>
             复制
           </button>
         </div>
+        <RoomInfo />
         <div className="round-badge">第 {round} / 4 轮</div>
+        <Glossary />
         <ThemeSwitcher />
+        <ConnBadge />
       </header>
 
       <div className="round-strip">
@@ -65,8 +69,6 @@ export function Room() {
         <aside className="rail rail-right">
           <DicePanel />
           <Toolbar />
-          <RoomInfo />
-          <Glossary />
         </aside>
       </main>
     </div>

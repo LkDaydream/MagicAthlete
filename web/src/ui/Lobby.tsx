@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { ConnBadge } from './ConnBadge'
 import { ThemeSwitcher } from './ThemeSwitcher'
 
 export function Lobby() {
@@ -20,7 +21,8 @@ export function Lobby() {
 
   return (
     <div className="lobby">
-      <h1>魔法运动员 · 联机棋盘</h1>
+      <ConnBadge />
+      <h1>魔法运动会 · 联机棋盘</h1>
       <p className="subtitle">和朋友一起拖棋子、掷骰子、玩桌游</p>
 
       <div className="segmented">

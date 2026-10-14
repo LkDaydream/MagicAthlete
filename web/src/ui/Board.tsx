@@ -78,10 +78,16 @@ export function Board() {
   useEffect(() => {
     const wrap = wrapRef.current
     if (!layout || !wrap) return
-    const update = () => setScale(Math.min(1, wrap.clientWidth / layout.width))
+    const area = wrap.parentElement ?? wrap
+    const update = () => {
+      const availW = area.clientWidth
+      // 宽度为 0（布局未就绪/极窄）时忽略，避免把棋盘缩没
+      if (availW <= 0) return
+      setScale(Math.max(0.25, Math.min(1.6, availW / layout.width)))
+    }
     update()
     const observer = new ResizeObserver(update)
-    observer.observe(wrap)
+    observer.observe(area)
     return () => observer.disconnect()
   }, [layout])
 
@@ -252,6 +258,9 @@ export function Board() {
       >
         <svg className="board-svg" width={layout.width} height={layout.height}>
           <polyline className="track-line" points={trackPoints} />
+          <text className="board-title" x={layout.width / 2} y={layout.height / 2} textAnchor="middle">
+            {layout.name}
+          </text>
           {layout.cells.map((cell) => {
             const custom = state?.cellColors?.[String(cell.index)]
             const count = stacking.counts.get(cell.index) ?? 0
@@ -263,9 +272,9 @@ export function Board() {
                 onClick={() => paintMode && paintCell(cell.index)}
               >
                 <rect
-                  x={cell.x - half}
+                  x={cell.x - (cell.w ?? layout.cellSize) / 2}
                   y={cell.y - half}
-                  width={layout.cellSize}
+                  width={cell.w ?? layout.cellSize}
                   height={layout.cellSize}
                   rx={14}
                   style={{ fill: custom ?? cellFill(cell.type) }}
