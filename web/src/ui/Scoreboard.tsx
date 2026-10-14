@@ -7,7 +7,7 @@ export function Scoreboard() {
   const resetScores = useGameStore((s) => s.resetScores)
 
   return (
-    <div className="panel">
+    <div className="panel scoreboard">
       <h3>计分板</h3>
       <ul className="score-list">
         {players.length === 0 && <li className="score-empty">暂无玩家</li>}

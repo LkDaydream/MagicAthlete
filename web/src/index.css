@@ -1123,6 +1123,76 @@ button.link {
   gap: 6px;
 }
 
+/* 棋盘下方（宽区域）：计分板横向铺开，玩家名可完整显示 */
+.board-area .score-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.board-area .score-list li {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-bg);
+}
+
+.board-area .score-list .score-value {
+  margin-left: 10px;
+}
+
+/* 计分板压缩成一条：标题/分数/清零同排 */
+.scoreboard {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.scoreboard h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 12px;
+}
+
+.scoreboard .score-list {
+  margin: 0;
+  gap: 8px;
+}
+
+.scoreboard .score-list li {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.scoreboard .score-list .score-value {
+  margin-left: 6px;
+  font-size: 15px;
+  min-width: 18px;
+}
+
+.scoreboard .score-btns button {
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+}
+
+.scoreboard .row {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.scoreboard .row button {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .score-list li {
   display: flex;
   align-items: center;

@@ -56,7 +56,6 @@ export function Room() {
 
       <main className="room-body">
         <aside className="rail rail-left">
-          <Scoreboard />
           <PlayerList />
           <CharacterPanel />
         </aside>
@@ -64,6 +63,7 @@ export function Room() {
         <div className="board-area">
           <Board />
           <RacersBar />
+          <Scoreboard />
         </div>
 
         <aside className="rail rail-right">
