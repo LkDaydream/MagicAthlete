@@ -51,7 +51,7 @@ export function DicePanel() {
 
   // 每次新结果：滚动动画后再定格
   useEffect(() => {
-    if (!lastDice || lastDice.seq === playedSeq.current) {
+    if (!lastDice || !lastDice.animate || lastDice.seq === playedSeq.current) {
       return
     }
     playedSeq.current = lastDice.seq

@@ -1,7 +1,8 @@
 import { useGameStore } from '../store/gameStore'
 import { TWIST_CARDS } from '../board/twistCards'
+import { DealStage } from './DealStage'
 
-/** 抽到扭扭卡时的弹窗（所有玩家看到同一张卡）。 */
+/** 抽到扭扭卡时的弹窗（所有玩家看到同一张卡；抽取动画期间不剧透）。 */
 export function TwistReveal() {
   const twistCard = useGameStore((s) => s.twistCard)
   const twistModalOpen = useGameStore((s) => s.twistModalOpen)
@@ -22,17 +23,15 @@ export function TwistReveal() {
             关闭
           </button>
         </div>
-        <div className={`twist-card${twistRevealing ? ' twist-back' : ''}`}>
-          {twistRevealing ? (
-            <div className="twist-rolling">抽卡中…</div>
-          ) : (
-            <>
-              <div className="twist-card-name">{card.name}</div>
-              <div className="twist-card-en">{card.nameEn}</div>
-              <div className="twist-card-effect">{card.effect}</div>
-            </>
-          )}
-        </div>
+        {twistRevealing ? (
+          <DealStage />
+        ) : (
+          <div className="twist-card">
+            <div className="twist-card-name">{card.name}</div>
+            <div className="twist-card-en">{card.nameEn}</div>
+            <div className="twist-card-effect">{card.effect}</div>
+          </div>
+        )}
       </div>
     </div>
   )

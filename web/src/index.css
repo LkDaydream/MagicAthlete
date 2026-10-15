@@ -1116,62 +1116,6 @@ button.link {
   font-weight: 700;
 }
 
-.char-tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.char-draw-btn {
-  padding: 5px 12px;
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.char-tools-hint {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.char-draw {
-  padding: 8px 10px;
-  margin-bottom: 8px;
-  border: 1px dashed var(--accent);
-  border-radius: 10px;
-  background: var(--chip-bg);
-}
-
-.char-draw-title {
-  margin-bottom: 4px;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--ink);
-}
-
-.char-draw-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.char-draw-actions button {
-  flex: 1;
-  padding: 5px 6px;
-  border: 1px solid var(--chip-border);
-  background: var(--chip-bg);
-  color: var(--chip-ink);
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .char-extras {
   margin-bottom: 8px;
 }
@@ -1186,36 +1130,482 @@ button.link {
   color: var(--ink);
 }
 
-.char-swap {
+/* 角色牌弹窗 */
+.card-modal {
+  max-width: 430px;
+}
+
+.card-draw-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-draw-main {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.card-draw-main:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.card-draw-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.draw-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 128px;
+  margin: 8px 0;
+  padding: 14px;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--panel-bg);
+  text-align: center;
+}
+
+.draw-card.revealing {
+  border-color: #5a2f96;
+  background: repeating-linear-gradient(45deg, #7b4bbf, #7b4bbf 12px, #6a3ba8 12px, #6a3ba8 24px);
+  animation: twistFlip 0.9s linear infinite;
+}
+
+.draw-card-back-text {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.draw-card-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.draw-card-name {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.draw-card-skill {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.draw-card-actions {
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
+  width: 100%;
+  margin-top: 6px;
 }
 
-.char-swap select {
+.draw-card-actions button {
   flex: 1;
-  padding: 5px 6px;
+  padding: 7px 6px;
   border: 1px solid var(--chip-border);
+  border-radius: 8px;
   background: var(--chip-bg);
   color: var(--chip-ink);
-  border-radius: 7px;
-  font-size: 12px;
-}
-
-.char-swap button {
-  padding: 5px 10px;
-  border: 1px solid var(--chip-border);
-  background: var(--chip-bg);
-  color: var(--chip-ink);
-  border-radius: 7px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.char-swap button:disabled {
+.card-section {
+  margin-top: 10px;
+}
+
+.card-section-title {
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.card-extra {
+  padding: 3px 6px;
+  margin-bottom: 3px;
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  background: var(--chip-bg);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.card-swap {
+  display: flex;
+  gap: 6px;
+}
+
+.card-swap select {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+}
+
+.card-swap button {
+  padding: 6px 12px;
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.card-swap button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 抽牌（从牌堆抽出）动画 */
+.deal-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 128px;
+}
+
+.deck-stack {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  width: 84px;
+  height: 56px;
+  transform: translateX(-50%);
+}
+
+.deck-back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 84px;
+  height: 56px;
+  border: 2px solid #5a2f96;
+  border-radius: 8px;
+  background: repeating-linear-gradient(45deg, #7b4bbf, #7b4bbf 8px, #6a3ba8 8px, #6a3ba8 16px);
+  animation: deckWiggle 0.5s ease-in-out infinite;
+}
+
+.deck-back:nth-child(1) {
+  left: -6px;
+  top: -6px;
+}
+
+.deck-back:nth-child(2) {
+  left: 0;
+  top: -3px;
+  animation-delay: 0.1s;
+}
+
+.deck-back:nth-child(3) {
+  left: 6px;
+  top: 0;
+  animation-delay: 0.2s;
+}
+
+.deal-card {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 116px;
+  height: 82px;
+  border: 2px solid #5a2f96;
+  border-radius: 10px;
+  background: repeating-linear-gradient(45deg, #7b4bbf, #7b4bbf 10px, #6a3ba8 10px, #6a3ba8 20px);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  animation: dealOut 0.7s ease-out;
+}
+
+@keyframes deckWiggle {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes dealOut {
+  0% {
+    transform: translateY(44px) scale(0.7) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-8px) scale(1.06) rotate(3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* 角色牌：张数 + 选牌 */
+.card-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-count-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card-count button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--chip-border);
+  border-radius: 7px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.card-count button.active {
+  border-color: var(--accent);
+  background: var(--chip-active-bg);
+  color: var(--ink);
+}
+
+.card-pick {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pick-card {
+  flex: 1;
+  padding: 10px 8px;
+  border: 2px solid var(--chip-border);
+  border-radius: 10px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  cursor: pointer;
+  text-align: center;
+}
+
+.pick-card.sel {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.pick-name {
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.pick-skill {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.card-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* 扭扭卡：记录按钮 */
+.twist-head-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.twist-log-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--chip-border);
+  border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.twist-mode {
+  padding: 4px 6px;
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+}
+
+.twist-head {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.twist-head-actions {
+  flex-wrap: wrap;
+}
+
+/* 速查弹窗 */
+.lookup-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.lookup-tab {
+  padding: 6px 10px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lookup-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.twist-lookup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.twist-lookup-row {
+  padding: 8px 10px;
+  border-left: 3px solid var(--accent);
+  border-radius: 9px;
+  background: var(--chip-bg);
+}
+
+.twist-lookup-name {
+  margin-bottom: 3px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.twist-lookup-en {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.twist-lookup-effect {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.lookup-theme-hint {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 主题：合并为单个下拉 */
+.theme-select {
+  padding: 5px 8px;
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 角色牌：自选 */
+.card-pick-toggle {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.card-picker {
+  margin-top: 8px;
+}
+
+.card-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  margin-top: 6px;
+  overflow-y: auto;
+}
+
+.card-picker-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.card-picker-row:hover {
+  border-color: var(--accent);
+}
+
+.card-picker-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.card-picker-skill {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 .char-chips {

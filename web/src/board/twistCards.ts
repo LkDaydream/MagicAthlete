@@ -14,7 +14,7 @@ export const TWIST_CARDS: TwistCard[] = [
   {
     name: '炼金实验室收容泄露',
     nameEn: 'Alchemy Lab Containment Breach',
-    effect: '把【大嘴狼人】放到起点；每回合结束后掷骰移动，被它超过的选手直接淘汰。',
+    effect: '把【大嘴狼人】放到起点；从此刻起，每个玩家回合结束时都掷骰移动它，被它超过的选手直接淘汰。',
   },
   {
     name: '终点线虫虫泛滥',

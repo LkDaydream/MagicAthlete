@@ -10,8 +10,8 @@ export interface PlayerView {
   characters: string[]
   /** 已使用过的角色 id。 */
   usedCharacters: string[]
-  /** 抽到但未决定用途的角色牌（旧货集市 / 缝合怪）。 */
-  pendingDraw?: string | null
+  /** 抽到但未决定用途的角色牌（旧货集市 / 缝合怪 / 蛋）。 */
+  pendingDraws?: string[]
   /** 附加能力（缝合怪）。 */
   extras?: string[]
   /** 本轮正在使用的角色 id。 */
@@ -46,6 +46,8 @@ export interface RoomState {
   roomCode: string
   boardSide: BoardSide
   characterSet: CharacterSet
+  /** 扭扭卡抽取模式：discard（弃牌堆） / return（放回重洗）。 */
+  twistMode?: string
   piecesPerPlayer: number
   round: number
   players: PlayerView[]

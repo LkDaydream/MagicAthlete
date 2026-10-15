@@ -28,6 +28,8 @@ export interface DiceRoll {
   playerId: string
   values: number[]
   hidden: boolean
+  /** 是否播放掷骰动画（手动改点/隐藏为 false）。 */
+  animate: boolean
   seq: number
   at: number
 }
@@ -45,7 +47,9 @@ interface GameStore {
   diceHistory: DiceRoll[]
   lastDice: DiceRoll | null
   /** 最近抽到的扭扭卡（索引）；null 表示无。 */
-  twistCard: { index: number; byPlayer: string } | null
+  twistCard: { index: number; byPlayer: string; at: number } | null
+  /** 扭扭卡抽取历史（最近若干次）。 */
+  twistHistory: { index: number; byPlayer: string; at: number }[]
   /** 扭扭卡揭示弹窗是否打开（关闭后仍保留当前卡）。 */
   twistModalOpen: boolean
   /** 扭扭卡是否处于“抽取动画中”（期间不剧透结果）。 */
@@ -72,6 +76,7 @@ interface GameStore {
   undoTurn(): void
   setBoardSide(side: BoardSide): void
   drawTwist(): void
+  setTwistMode(mode: 'discard' | 'return'): void
   closeTwist(): void
   addPiece(npc?: boolean, name?: string, color?: string): void
   removePiece(pieceId: string): void
@@ -79,7 +84,8 @@ interface GameStore {
   toggleSound(): void
   useCharacter(characterId: string): void
   unuseCharacter(characterId: string): void
-  drawChara(): void
+  drawChara(count?: number): void
+  pickChara(characterId: string): void
   replaceChara(characterId: string): void
   attachChara(characterId: string): void
   swapChara(targetPlayerId: string): void
@@ -170,6 +176,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           playerId: payload.playerId,
           values,
           hidden: Boolean(payload.hidden),
+          animate: true,
           seq: message.seq,
           at: Date.now(),
         }
@@ -180,11 +187,33 @@ export const useGameStore = create<GameStore>((set, get) => {
         })
         break
       }
-      case 'twist:drawn':
-        set({ twistCard: { index: payload.index, byPlayer: payload.byPlayer }, twistModalOpen: true, twistRevealing: true })
+      case 'dice:updated': {
+        // 手动改点 / 隐藏 / 揭晓：就地更新，不改变 seq、不播动画、不记入掷骰历史
+        const prev = get().lastDice
+        set({
+          lastDice: {
+            playerId: prev?.playerId ?? payload.playerId,
+            values: Array.isArray(payload.values) ? payload.values : [],
+            hidden: Boolean(payload.hidden),
+            animate: false,
+            seq: prev?.seq ?? message.seq,
+            at: Date.now(),
+          },
+        })
+        break
+      }
+      case 'twist:drawn': {
+        const entry = { index: payload.index, byPlayer: payload.byPlayer, at: Date.now() }
+        set({
+          twistCard: entry,
+          twistHistory: [entry, ...get().twistHistory].slice(0, 30),
+          twistModalOpen: true,
+          twistRevealing: true,
+        })
         if (twistTimer) window.clearTimeout(twistTimer)
         twistTimer = window.setTimeout(() => set({ twistRevealing: false }), 1200)
         break
+      }
       case 'error':
         set({ error: payload.message ?? '发生错误' })
         break
@@ -217,6 +246,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       diceHistory: [],
       lastDice: null,
       twistCard: null,
+      twistHistory: [],
       twistModalOpen: false,
       twistRevealing: false,
       lastRolls: {},
@@ -238,6 +268,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     diceHistory: [],
     lastDice: null,
     twistCard: null,
+    twistHistory: [],
     twistModalOpen: false,
     twistRevealing: false,
     lastRolls: {},
@@ -326,6 +357,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       socket.send('twist:draw')
     },
 
+    setTwistMode(mode) {
+      socket.send('twist:mode', { mode })
+    },
+
     closeTwist() {
       set({ twistModalOpen: false })
     },
@@ -356,8 +391,12 @@ export const useGameStore = create<GameStore>((set, get) => {
       socket.send('chara:unuse', { characterId })
     },
 
-    drawChara() {
-      socket.send('chara:draw')
+    drawChara(count) {
+      socket.send('chara:draw', { count: Math.max(1, Math.min(3, count ?? 1)) })
+    },
+
+    pickChara(characterId) {
+      socket.send('chara:pick', { characterId })
     },
 
     replaceChara(characterId) {

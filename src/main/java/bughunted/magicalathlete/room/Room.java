@@ -3,10 +3,12 @@ package bughunted.magicalathlete.room;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -24,6 +26,11 @@ public class Room {
     private final Deque<MoveRecord> moveHistory = new ArrayDeque<>();
     /** 已洗牌的角色牌堆，用于给玩家发角色。 */
     private final Deque<String> deck = new ArrayDeque<>();
+    /** 扭扭卡牌堆（存卡索引）与弃牌堆。 */
+    private final Deque<Integer> twistDeck = new ArrayDeque<>();
+    private final List<Integer> twistDiscard = new ArrayList<>();
+    /** 扭扭卡抽取模式：discard=抽进弃牌堆（抽空重洗）；return=抽出的牌放回牌堆并混洗。 */
+    private volatile String twistMode = "discard";
 
     private volatile String boardSide = "mild";
     private volatile String characterSet = "mixed";
@@ -172,6 +179,59 @@ public class Room {
             hand.add(deck.poll());
         }
         return hand;
+    }
+
+    // --------------------------------------------------------------- twist
+
+    /**
+     * 抽一张扭扭卡（返回卡索引）。两种模式：
+     * discard：抽过的卡进弃牌堆，牌堆抽空后把弃牌堆重洗为新牌堆（不会立即重复）；
+     * return： 抽出的牌立即放回牌堆并混洗（可能重复）。
+     */
+    public synchronized int drawTwist(int count, Random random) {
+        if (twistDeck.isEmpty() && twistDiscard.isEmpty()) {
+            resetTwistDeck(count, random);
+        }
+        if ("return".equals(twistMode)) {
+            if (twistDeck.isEmpty()) {
+                resetTwistDeck(count, random);
+            }
+            // 抽出的牌放回牌堆并混洗 ⇒ 等价于在整副牌里等概率抽一张
+            List<Integer> all = new ArrayList<>(twistDeck);
+            return all.get(random.nextInt(all.size()));
+        }
+        if (twistDeck.isEmpty()) {
+            List<Integer> again = new ArrayList<>(twistDiscard);
+            twistDiscard.clear();
+            Collections.shuffle(again, random);
+            twistDeck.addAll(again);
+        }
+        if (twistDeck.isEmpty()) {
+            return -1;
+        }
+        int index = twistDeck.poll();
+        twistDiscard.add(index);
+        return index;
+    }
+
+    public String getTwistMode() {
+        return twistMode;
+    }
+
+    public void setTwistMode(String twistMode) {
+        this.twistMode = twistMode;
+    }
+
+    /** 重置扭扭卡牌堆为 0..count-1 的洗牌序列，并清空弃牌堆。 */
+    public synchronized void resetTwistDeck(int count, Random random) {
+        twistDeck.clear();
+        twistDiscard.clear();
+        List<Integer> ids = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            ids.add(i);
+        }
+        Collections.shuffle(ids, random);
+        twistDeck.addAll(ids);
     }
 
     public int getRound() {

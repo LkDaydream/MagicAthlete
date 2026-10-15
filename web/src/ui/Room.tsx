@@ -1,17 +1,16 @@
 import { useGameStore } from '../store/gameStore'
 import { Board } from './Board'
+import { CardModal } from './CardModal'
 import { CharacterPanel } from './CharacterPanel'
-import { CharacterLookup } from './CharacterLookup'
 import { ConnBadge } from './ConnBadge'
 import { DicePanel } from './DicePanel'
-import { Glossary } from './Glossary'
+import { LookupModal } from './LookupModal'
 import { PlayerList } from './PlayerList'
 import { RacersBar } from './RacersBar'
 import { RoomInfo } from './RoomInfo'
-import { RulesModal } from './RulesModal'
 import { Scoreboard } from './Scoreboard'
-import { ThemeSwitcher } from './ThemeSwitcher'
 import { Toolbar } from './Toolbar'
+import { ThemeSwitcher } from './ThemeSwitcher'
 import { TwistPanel } from './TwistPanel'
 import { TwistReveal } from './TwistReveal'
 
@@ -37,9 +36,8 @@ export function Room() {
         </div>
         <RoomInfo />
         <div className="round-badge">第 {round} / 4 轮</div>
-        <Glossary />
-        <RulesModal />
-        <CharacterLookup />
+        <CardModal />
+        <LookupModal />
         <ThemeSwitcher />
         <ConnBadge />
       </header>
