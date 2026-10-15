@@ -16,6 +16,8 @@ public class Piece {
     private volatile String label;
     /** 自定义颜色（NPC 颜色；为空则用所属玩家颜色）。 */
     private volatile String color;
+    /** 是否处于「绊倒 / 摔倒」状态（下次主移动跳过）。 */
+    private volatile boolean tripped;
 
     public Piece(String id, String ownerId, int cell) {
         this.id = id;
@@ -74,6 +76,14 @@ public class Piece {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public boolean isTripped() {
+        return tripped;
+    }
+
+    public void setTripped(boolean tripped) {
+        this.tripped = tripped;
     }
 
     /** 落子：固定到某格并清除拖动中的临时坐标与锁。 */

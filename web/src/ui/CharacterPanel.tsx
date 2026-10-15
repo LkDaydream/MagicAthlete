@@ -12,13 +12,21 @@ export function CharacterPanel() {
   const redeal = useGameStore((s) => s.redeal)
   const charSet = useGameStore((s) => s.state?.characterSet ?? 'mixed')
   const setCharacterSet = useGameStore((s) => s.setCharacterSet)
+  const drawChara = useGameStore((s) => s.drawChara)
+  const replaceChara = useGameStore((s) => s.replaceChara)
+  const attachChara = useGameStore((s) => s.attachChara)
+  const swapChara = useGameStore((s) => s.swapChara)
+  const cancelCharaDraw = useGameStore((s) => s.cancelCharaDraw)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [swapTarget, setSwapTarget] = useState('')
 
   const players = state?.players ?? []
   const info = state?.characterInfo ?? {}
   const round = state?.round ?? 1
   const me = players.find((p) => p.id === myId)
   const others = players.filter((p) => p.id !== myId)
+  const pending = me?.pendingDraw ?? null
+  const extras = me?.extras ?? []
 
   const nameOf = (id: string) => info[id]?.name ?? id
   const skillOf = (id: string) => info[id]?.skill ?? '—'
@@ -44,6 +52,27 @@ export function CharacterPanel() {
           <button onClick={redeal}>重新发牌</button>
         </div>
       </div>
+
+      <div className="char-tools">
+        <button className="char-draw-btn" onClick={drawChara}>
+          抽新选手
+        </button>
+        <span className="char-tools-hint">旧货集市 / 缝合怪</span>
+      </div>
+
+      {pending && (
+        <div className="char-draw">
+          <div className="char-draw-title">抽到新选手 · {nameOf(pending)}</div>
+          <div className="char-skill">{skillOf(pending)}</div>
+          <div className="char-draw-actions">
+            <button onClick={() => replaceChara(pending)}>替换出战</button>
+            <button onClick={() => attachChara(pending)}>附加能力</button>
+            <button className="link" onClick={cancelCharaDraw}>
+              放弃
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="char-list mine">
         {(me?.characters ?? []).map((cid) => {
@@ -71,6 +100,40 @@ export function CharacterPanel() {
           )
         })}
         {(me?.characters ?? []).length === 0 && <div className="char-empty">暂未发到角色</div>}
+      </div>
+
+      {extras.length > 0 && (
+        <div className="char-extras">
+          <div className="char-sub">附加能力（缝合怪）</div>
+          {extras.map((cid) => (
+            <div key={cid} className="char-extra">
+              <b>{nameOf(cid)}</b> · {skillOf(cid)}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="char-sub">交换操控权（狸猫换太子）</div>
+      <div className="char-swap">
+        <select value={swapTarget} onChange={(event) => setSwapTarget(event.target.value)}>
+          <option value="">选择玩家…</option>
+          {others.map((player) => (
+            <option key={player.id} value={player.id}>
+              {player.name}
+            </option>
+          ))}
+        </select>
+        <button
+          disabled={!swapTarget}
+          onClick={() => {
+            if (swapTarget) {
+              swapChara(swapTarget)
+              setSwapTarget('')
+            }
+          }}
+        >
+          交换角色牌
+        </button>
       </div>
 
       <div className="char-sub">其他玩家（点角色名看技能）</div>

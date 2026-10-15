@@ -26,7 +26,8 @@ function loadToken(): string {
 
 export interface DiceRoll {
   playerId: string
-  value: number
+  values: number[]
+  hidden: boolean
   seq: number
   at: number
 }
@@ -65,7 +66,8 @@ interface GameStore {
   setArmedColor(color: string | null): void
   selectPiece(id: string | null): void
   paintCell(cell: number): void
-  rollDice(): void
+  rollDice(count?: number): void
+  setDice(values: number[], hidden: boolean): void
   resetRoom(): void
   undoTurn(): void
   setBoardSide(side: BoardSide): void
@@ -73,9 +75,15 @@ interface GameStore {
   closeTwist(): void
   addPiece(npc?: boolean, name?: string, color?: string): void
   removePiece(pieceId: string): void
+  toggleTrip(pieceId: string, tripped: boolean): void
   toggleSound(): void
   useCharacter(characterId: string): void
   unuseCharacter(characterId: string): void
+  drawChara(): void
+  replaceChara(characterId: string): void
+  attachChara(characterId: string): void
+  swapChara(targetPlayerId: string): void
+  cancelCharaDraw(): void
   nextRound(): void
   redeal(): void
   theme: string
@@ -153,16 +161,22 @@ export const useGameStore = create<GameStore>((set, get) => {
         break
       }
       case 'dice:rolled': {
+        const values: number[] = Array.isArray(payload.values)
+          ? payload.values
+          : payload.value != null
+            ? [payload.value]
+            : []
         const roll: DiceRoll = {
           playerId: payload.playerId,
-          value: payload.value,
+          values,
+          hidden: Boolean(payload.hidden),
           seq: message.seq,
           at: Date.now(),
         }
         set({
           lastDice: roll,
           diceHistory: [roll, ...get().diceHistory].slice(0, 30),
-          lastRolls: { ...get().lastRolls, [payload.playerId]: payload.value },
+          lastRolls: { ...get().lastRolls, [payload.playerId]: values[0] ?? 0 },
         })
         break
       }
@@ -284,8 +298,12 @@ export const useGameStore = create<GameStore>((set, get) => {
       socket.send('cell:color', { cell, color: armedColor === ERASE ? null : armedColor })
     },
 
-    rollDice() {
-      socket.send('dice:roll')
+    rollDice(count) {
+      socket.send('dice:roll', { count: Math.max(1, Math.min(6, count ?? 1)) })
+    },
+
+    setDice(values, hidden) {
+      socket.send('dice:set', { values, hidden })
     },
 
     resetRoom() {
@@ -320,6 +338,10 @@ export const useGameStore = create<GameStore>((set, get) => {
       socket.send('piece:remove', { pieceId })
     },
 
+    toggleTrip(pieceId, tripped) {
+      socket.send('piece:trip', { pieceId, tripped })
+    },
+
     toggleSound() {
       const next = !get().soundOn
       localStorage.setItem('ma_sound', next ? 'on' : 'off')
@@ -332,6 +354,26 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     unuseCharacter(characterId) {
       socket.send('chara:unuse', { characterId })
+    },
+
+    drawChara() {
+      socket.send('chara:draw')
+    },
+
+    replaceChara(characterId) {
+      socket.send('chara:replace', { characterId })
+    },
+
+    attachChara(characterId) {
+      socket.send('chara:attach', { characterId })
+    },
+
+    swapChara(targetPlayerId) {
+      socket.send('chara:swap', { targetPlayerId })
+    },
+
+    cancelCharaDraw() {
+      socket.send('chara:cancel')
     },
 
     nextRound() {

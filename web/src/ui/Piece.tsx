@@ -21,6 +21,7 @@ export function Piece({ piece, player, x, y, z, dragging, selected, locked, onHo
   if (dragging) classNames.push('dragging')
   if (selected) classNames.push('selected')
   if (locked) classNames.push('locked')
+  if (piece.tripped) classNames.push('tripped')
   return (
     <div
       className={classNames.join(' ')}
@@ -37,6 +38,7 @@ export function Piece({ piece, player, x, y, z, dragging, selected, locked, onHo
     >
       <div className="piece-dot" style={{ background: piece.color ?? player?.color ?? (isNpc ? '#5c6b7a' : '#888') }} />
       <div className="piece-name">{piece.label ?? player?.name ?? (isNpc ? 'NPC' : '?')}</div>
+      {piece.tripped && <div className="piece-trip">绊</div>}
     </div>
   )
 }

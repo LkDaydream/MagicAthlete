@@ -10,6 +10,10 @@ export interface PlayerView {
   characters: string[]
   /** 已使用过的角色 id。 */
   usedCharacters: string[]
+  /** 抽到但未决定用途的角色牌（旧货集市 / 缝合怪）。 */
+  pendingDraw?: string | null
+  /** 附加能力（缝合怪）。 */
+  extras?: string[]
   /** 本轮正在使用的角色 id。 */
   activeCharacterId: string | null
   /** 当前分数。 */
@@ -34,6 +38,8 @@ export interface PieceView {
   label?: string | null
   /** 自定义颜色（NPC）。 */
   color?: string | null
+  /** 是否处于绊倒 / 摔倒状态。 */
+  tripped?: boolean
 }
 
 export interface RoomState {

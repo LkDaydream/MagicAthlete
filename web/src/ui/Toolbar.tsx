@@ -19,6 +19,9 @@ export function Toolbar() {
   const addPiece = useGameStore((s) => s.addPiece)
   const removePiece = useGameStore((s) => s.removePiece)
   const selectedPieceId = useGameStore((s) => s.selectedPieceId)
+  const pieces = useGameStore((s) => s.state?.pieces ?? [])
+  const toggleTrip = useGameStore((s) => s.toggleTrip)
+  const selected = pieces.find((p) => p.id === selectedPieceId)
   const resetRoom = useGameStore((s) => s.resetRoom)
   const undoTurn = useGameStore((s) => s.undoTurn)
   const paintMode = useGameStore((s) => s.paintMode)
@@ -49,6 +52,13 @@ export function Toolbar() {
         </button>
       </div>
       <div className="row">
+        <button
+          className={selected?.tripped ? 'active' : ''}
+          disabled={!selectedPieceId}
+          onClick={() => selectedPieceId && toggleTrip(selectedPieceId, !selected?.tripped)}
+        >
+          {selected?.tripped ? '取消绊倒' : '标记绊倒'}
+        </button>
         <button disabled={!selectedPieceId} onClick={() => selectedPieceId && removePiece(selectedPieceId)}>
           移除选中棋子
         </button>

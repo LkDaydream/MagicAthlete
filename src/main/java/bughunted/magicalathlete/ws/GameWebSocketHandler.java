@@ -87,16 +87,23 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             case "twist:draw" -> onTwistDraw(session);
             case "piece:add" -> onPieceAdd(session, payload);
             case "piece:remove" -> onPieceRemove(session, payload);
+            case "piece:trip" -> onPieceTrip(session, payload);
             case "cell:color" -> onCellColor(session, payload);
             case "drag:start" -> onDragStart(session, payload);
             case "drag:move" -> onDragMove(session, payload);
             case "drag:end" -> onDragEnd(session, payload);
-            case "dice:roll" -> onDiceRoll(session);
+            case "dice:roll" -> onDiceRoll(session, payload);
+            case "dice:set" -> onDiceSet(session, payload);
             case "move:undo" -> onUndo(session);
             case "room:reset" -> onReset(session);
             case "chara:use" -> onUseCharacter(session, payload);
             case "chara:unuse" -> onUnuseCharacter(session, payload);
             case "room:nextRound" -> onNextRound(session);
+            case "chara:draw" -> onCharaDraw(session);
+            case "chara:replace" -> onCharaReplace(session, payload);
+            case "chara:attach" -> onCharaAttach(session, payload);
+            case "chara:swap" -> onCharaSwap(session, payload);
+            case "chara:cancel" -> onCharaCancel(session);
             case "room:redeal" -> onRedeal(session);
             case "chara:set" -> onCharaSet(session, payload);
             case "room:leave" -> onLeave(session);
@@ -241,6 +248,21 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         broadcastState(room);
     }
 
+    /** 标记 / 取消棋子的「绊倒 / 摔倒」。 */
+    private void onPieceTrip(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        Piece piece = room.getPiece(payload.path("pieceId").asText(""));
+        if (piece == null) {
+            return;
+        }
+        piece.setTripped(payload.path("tripped").asBoolean(!piece.isTripped()));
+        broadcastState(room);
+    }
+
     /** 抽取一张扭扭卡：服务端随机决定索引，广播给所有人（保证大家看到同一张）。 */
     private void onTwistDraw(WebSocketSession session) {
         Membership membership = memberships.get(session.getId());
@@ -350,16 +372,43 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
     // ------------------------------------------------------------------ dice
 
-    private void onDiceRoll(WebSocketSession session) {
+    private void onDiceRoll(WebSocketSession session, JsonNode payload) {
         Membership membership = memberships.get(session.getId());
         Room room = room(membership);
         if (room == null) {
             return;
         }
-        int value = 1 + random.nextInt(6);
+        int count = Math.max(1, Math.min(6, payload.path("count").asInt(1)));
+        List<Integer> values = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            values.add(1 + random.nextInt(6));
+        }
         Map<String, Object> msg = new HashMap<>();
         msg.put("playerId", membership.playerId());
-        msg.put("value", value);
+        msg.put("values", values);
+        msg.put("hidden", false);
+        broadcast(room, "dice:rolled", msg);
+    }
+
+    /** 手动设置骰子点数（如骗人豹「指定 / 隐藏点数」）；hidden=true 时对所有玩家显示为 "?"。 */
+    private void onDiceSet(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        List<Integer> values = new ArrayList<>();
+        JsonNode arr = payload.path("values");
+        if (arr.isArray()) {
+            for (JsonNode node : arr) {
+                values.add(Math.max(1, Math.min(6, node.asInt(1))));
+            }
+        }
+        boolean hidden = payload.path("hidden").asBoolean(false);
+        Map<String, Object> msg = new HashMap<>();
+        msg.put("playerId", membership.playerId());
+        msg.put("values", values);
+        msg.put("hidden", hidden);
         broadcast(room, "dice:rolled", msg);
     }
 
@@ -481,6 +530,93 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             return set;
         }
         return "mixed";
+    }
+
+    /** 抽取一名「新选手」（旧货集市 / 缝合怪）：从当前角色池随机取一张未被占用的卡。 */
+    private void onCharaDraw(WebSocketSession session) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        Player player = room == null ? null : room.getPlayer(membership.playerId());
+        if (player == null) {
+            return;
+        }
+        String drawn = drawUnusedCharacter(room);
+        if (drawn == null) {
+            return;
+        }
+        player.setPendingDraw(drawn);
+        broadcastState(room);
+    }
+
+    /** 旧货集市：用抽到的新选手替换当前出战角色。 */
+    private void onCharaReplace(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        Player player = room == null ? null : room.getPlayer(membership.playerId());
+        if (player == null) {
+            return;
+        }
+        player.replaceWith(payload.path("characterId").asText(player.getPendingDraw()));
+        broadcastState(room);
+    }
+
+    /** 缝合怪：把抽到的选手作为附加能力（持续到本局结束）。 */
+    private void onCharaAttach(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        Player player = room == null ? null : room.getPlayer(membership.playerId());
+        if (player == null) {
+            return;
+        }
+        player.attachExtra(payload.path("characterId").asText(player.getPendingDraw()));
+        broadcastState(room);
+    }
+
+    /** 狸猫换太子：与目标玩家交换角色牌（操控权）。 */
+    private void onCharaSwap(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        Player player = room == null ? null : room.getPlayer(membership.playerId());
+        Player target = room == null ? null : room.getPlayer(payload.path("targetPlayerId").asText(""));
+        if (player == null || target == null || player == target) {
+            return;
+        }
+        player.swapCardsWith(target);
+        broadcastState(room);
+    }
+
+    /** 放弃本次抽取。 */
+    private void onCharaCancel(WebSocketSession session) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        Player player = room == null ? null : room.getPlayer(membership.playerId());
+        if (player == null) {
+            return;
+        }
+        player.setPendingDraw(null);
+        broadcastState(room);
+    }
+
+    /** 从角色池随机挑一张「尚未被任何玩家持有（手牌 / 附加 / 待定）」的卡。 */
+    private String drawUnusedCharacter(Room room) {
+        Set<String> used = new HashSet<>();
+        for (Player p : room.getPlayers()) {
+            used.addAll(p.getCharacters());
+            used.addAll(p.getExtras());
+            if (p.getPendingDraw() != null) {
+                used.add(p.getPendingDraw());
+            }
+        }
+        List<String> pool = new ArrayList<>();
+        for (Character character : catalog.all()) {
+            if (!used.contains(character.id()) && CharacterCatalog.matchesSet(character.id(), room.getCharacterSet())) {
+                pool.add(character.id());
+            }
+        }
+        if (pool.isEmpty()) {
+            return null;
+        }
+        return pool.get(random.nextInt(pool.size()));
     }
 
     // ------------------------------------------------------- leave / end
@@ -628,6 +764,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             pv.put("characters", new ArrayList<>(p.getCharacters()));
             pv.put("usedCharacters", new ArrayList<>(p.getUsedCharacters()));
             pv.put("activeCharacterId", p.getActiveCharacterId());
+            pv.put("pendingDraw", p.getPendingDraw());
+            pv.put("extras", new ArrayList<>(p.getExtras()));
             pv.put("score", p.getScore());
             players.add(pv);
         }
@@ -644,6 +782,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             pv.put("lockedBy", piece.getLockedBy());
             pv.put("label", piece.getLabel());
             pv.put("color", piece.getColor());
+            pv.put("tripped", piece.isTripped());
             pieces.add(pv);
         }
         view.put("pieces", pieces);
@@ -656,6 +795,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         Set<String> inPlay = new HashSet<>();
         for (Player p : room.getPlayers()) {
             inPlay.addAll(p.getCharacters());
+            inPlay.addAll(p.getExtras());
+            if (p.getPendingDraw() != null) {
+                inPlay.add(p.getPendingDraw());
+            }
         }
         for (String id : inPlay) {
             Character character = catalog.get(id);

@@ -19,6 +19,10 @@ public class Player {
     private final List<String> characters = new ArrayList<>();
     private final Set<String> usedCharacters = new LinkedHashSet<>();
     private volatile String activeCharacterId;
+    /** 旧货集市 / 缝合怪：抽到但尚未决定用途的角色牌。 */
+    private volatile String pendingDraw;
+    /** 附加能力（缝合怪），持续到本局结束。 */
+    private final List<String> extras = new ArrayList<>();
     private volatile int score;
 
     public Player(String id, String token, String name, String color) {
@@ -69,6 +73,18 @@ public class Player {
         return activeCharacterId;
     }
 
+    public String getPendingDraw() {
+        return pendingDraw;
+    }
+
+    public void setPendingDraw(String pendingDraw) {
+        this.pendingDraw = pendingDraw;
+    }
+
+    public List<String> getExtras() {
+        return extras;
+    }
+
     public int getScore() {
         return score;
     }
@@ -95,10 +111,60 @@ public class Player {
         }
     }
 
+    /** 旧货集市：用抽到的新选手替换当前出战角色。 */
+    public void replaceWith(String newId) {
+        if (newId == null || newId.isEmpty()) {
+            return;
+        }
+        if (activeCharacterId != null && !activeCharacterId.equals(newId)) {
+            characters.remove(activeCharacterId);
+            usedCharacters.remove(activeCharacterId);
+        }
+        if (!characters.contains(newId)) {
+            characters.add(newId);
+        }
+        activeCharacterId = newId;
+        usedCharacters.add(newId);
+        pendingDraw = null;
+    }
+
+    /** 缝合怪：把抽到的选手作为附加能力（持续到本局结束）。 */
+    public void attachExtra(String id) {
+        if (id != null && !id.isEmpty() && !extras.contains(id)) {
+            extras.add(id);
+        }
+        pendingDraw = null;
+    }
+
+    /** 狸猫换太子：与对方交换角色牌（手牌 / 已用 / 出战）。 */
+    public void swapCardsWith(Player other) {
+        List<String> tmpChars = new ArrayList<>(this.characters);
+        this.characters.clear();
+        this.characters.addAll(other.characters);
+        other.characters.clear();
+        other.characters.addAll(tmpChars);
+
+        Set<String> tmpUsed = new LinkedHashSet<>(this.usedCharacters);
+        this.usedCharacters.clear();
+        this.usedCharacters.addAll(other.usedCharacters);
+        other.usedCharacters.clear();
+        other.usedCharacters.addAll(tmpUsed);
+
+        String tmpActive = this.activeCharacterId;
+        this.activeCharacterId = other.activeCharacterId;
+        other.activeCharacterId = tmpActive;
+
+        String tmpPending = this.pendingDraw;
+        this.pendingDraw = other.pendingDraw;
+        other.pendingDraw = tmpPending;
+    }
+
     /** 清空角色手牌与使用状态（用于重新发牌）。 */
     public void resetCharacters() {
         characters.clear();
         usedCharacters.clear();
         activeCharacterId = null;
+        pendingDraw = null;
+        extras.clear();
     }
 }

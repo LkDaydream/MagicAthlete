@@ -697,6 +697,176 @@ button.link {
   width: 100%;
 }
 
+/* 多骰 + 手动改点 */
+.dice-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.dice-count-label,
+.dice-set-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dice-count button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dice-count button.active {
+  background: var(--chip-active-bg);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.dice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.die-slot {
+  position: relative;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.die-slot.sel {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.die-slot .die {
+  width: 44px;
+  height: 44px;
+  padding: 5px;
+  border-radius: 11px;
+}
+
+.die-slot .pip {
+  width: 7px;
+  height: 7px;
+}
+
+.die-q {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.dice-set {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.dice-set button {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dice-set .dice-hide {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.dice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dice-head h3 {
+  flex: 1;
+}
+
+.dice-log-btn {
+  flex: 0 0 auto;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dice-log {
+  max-width: 460px;
+}
+
+.dice-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dice-log-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 13px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.dl-time {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dl-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dl-val {
+  margin-left: auto;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.dice-log-empty {
+  font-size: 13px;
+  color: var(--muted);
+}
+
 /* 调色盘 */
 
 .palette {
@@ -916,6 +1086,26 @@ button.link {
   border: 2px solid var(--piece-ring);
 }
 
+.piece-trip {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #c62b22;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.piece.tripped .piece-dot {
+  opacity: 0.45;
+}
+
 .char-set {
   padding: 5px 6px;
   border: 1px solid var(--chip-border);
@@ -924,6 +1114,108 @@ button.link {
   border-radius: 10px;
   font-size: 12px;
   font-weight: 700;
+}
+
+.char-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.char-draw-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.char-tools-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.char-draw {
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  background: var(--chip-bg);
+}
+
+.char-draw-title {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.char-draw-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.char-draw-actions button {
+  flex: 1;
+  padding: 5px 6px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.char-extras {
+  margin-bottom: 8px;
+}
+
+.char-extra {
+  padding: 3px 6px;
+  margin-bottom: 3px;
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  background: var(--chip-bg);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.char-swap {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.char-swap select {
+  flex: 1;
+  padding: 5px 6px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.char-swap button {
+  padding: 5px 10px;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.char-swap button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .char-chips {
