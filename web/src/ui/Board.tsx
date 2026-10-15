@@ -123,7 +123,9 @@ export function Board() {
       if (!cell) continue
       const count = list.length
       list.forEach((piece, index) => {
-        const offset = count > 1 ? index * 14 - (count - 1) * 7 : 0
+        // 同格堆叠错开的步长（越大则棋子重叠越少）
+        const step = 24
+        const offset = count > 1 ? index * step - (count - 1) * (step / 2) : 0
         positions.set(piece.id, { x: cell.x + offset, y: cell.y + offset, z: index + 1 })
       })
     }
