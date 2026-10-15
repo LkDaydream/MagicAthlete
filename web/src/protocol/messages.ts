@@ -48,6 +48,16 @@ export interface RoomState {
   characterSet: CharacterSet
   /** 扭扭卡抽取模式：discard（弃牌堆） / return（放回重洗）。 */
   twistMode?: string
+  /** 扭扭卡牌堆中剩余卡的索引（已排序）。 */
+  twistDeck?: number[]
+  /** 扭扭卡弃牌堆中卡的索引（已排序）。 */
+  twistDiscard?: number[]
+  /** 开局每人发牌数。 */
+  charactersPerPlayer?: number
+  /** 发牌方式：random（随机发牌） / draft（卡池抽选）。 */
+  dealMode?: string
+  /** 卡池抽选模式下的公共牌池（未被领取的角色 id）。 */
+  draftPool?: string[]
   piecesPerPlayer: number
   round: number
   players: PlayerView[]

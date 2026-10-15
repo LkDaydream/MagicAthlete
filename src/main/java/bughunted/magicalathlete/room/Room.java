@@ -35,6 +35,14 @@ public class Room {
     private volatile String boardSide = "mild";
     private volatile String characterSet = "mixed";
     private volatile int piecesPerPlayer = 1;
+    /** 开局每人发牌数。 */
+    private volatile int charactersPerPlayer = 4;
+    /** 发牌方式：random=每人随机发牌；draft=抽出公共牌池由玩家领取。 */
+    private volatile String dealMode = "random";
+    /** 抽选模式下的公共牌池（未被领取的角色 id）。 */
+    private final List<String> draftPool = new ArrayList<>();
+    /** 牌池是否已被领取过（用于人数变化时决定重建还是追加）。 */
+    private volatile boolean draftPoolTouched;
     private volatile int round = 1;
 
     public Room(String code) {
@@ -67,6 +75,53 @@ public class Room {
 
     public void setPiecesPerPlayer(int piecesPerPlayer) {
         this.piecesPerPlayer = piecesPerPlayer;
+    }
+
+    public int getCharactersPerPlayer() {
+        return charactersPerPlayer;
+    }
+
+    public void setCharactersPerPlayer(int charactersPerPlayer) {
+        this.charactersPerPlayer = Math.max(1, Math.min(12, charactersPerPlayer));
+    }
+
+    public String getDealMode() {
+        return dealMode;
+    }
+
+    public void setDealMode(String dealMode) {
+        this.dealMode = dealMode;
+    }
+
+    public synchronized List<String> getDraftPool() {
+        return new ArrayList<>(draftPool);
+    }
+
+    public synchronized void setDraftPool(Collection<String> ids) {
+        draftPool.clear();
+        if (ids != null) {
+            draftPool.addAll(ids);
+        }
+        draftPoolTouched = false;
+    }
+
+    public boolean isDraftPoolTouched() {
+        return draftPoolTouched;
+    }
+
+    public synchronized void addToDraftPool(String id) {
+        if (id != null) {
+            draftPool.add(id);
+        }
+    }
+
+    /** 从公共牌池中领取一张（成功返回 true）。 */
+    public synchronized boolean takeFromPool(String id) {
+        boolean removed = draftPool.remove(id);
+        if (removed) {
+            draftPoolTouched = true;
+        }
+        return removed;
     }
 
     // ---------------------------------------------------------------- players
@@ -232,6 +287,20 @@ public class Room {
         }
         Collections.shuffle(ids, random);
         twistDeck.addAll(ids);
+    }
+
+    /** 牌堆中剩余卡的索引（已排序，仅内容、不泄露抽取顺序）。 */
+    public synchronized List<Integer> getTwistDeckCards() {
+        List<Integer> list = new ArrayList<>(twistDeck);
+        Collections.sort(list);
+        return list;
+    }
+
+    /** 弃牌堆中卡的索引（已排序）。 */
+    public synchronized List<Integer> getTwistDiscardCards() {
+        List<Integer> list = new ArrayList<>(twistDiscard);
+        Collections.sort(list);
+        return list;
     }
 
     public int getRound() {

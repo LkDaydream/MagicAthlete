@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import type { CharacterSet } from '../protocol/messages'
+import { DealModal } from './DealModal'
 
 /** 角色面板：展示每名玩家分到的角色与其技能，并标记每轮使用的角色。 */
 export function CharacterPanel() {
@@ -9,7 +10,6 @@ export function CharacterPanel() {
   const useCharacter = useGameStore((s) => s.useCharacter)
   const unuseCharacter = useGameStore((s) => s.unuseCharacter)
   const nextRound = useGameStore((s) => s.nextRound)
-  const redeal = useGameStore((s) => s.redeal)
   const charSet = useGameStore((s) => s.state?.characterSet ?? 'mixed')
   const setCharacterSet = useGameStore((s) => s.setCharacterSet)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -42,7 +42,7 @@ export function CharacterPanel() {
           <button onClick={nextRound} disabled={round >= 4}>
             下一轮
           </button>
-          <button onClick={redeal}>重新发牌</button>
+          <DealModal />
         </div>
       </div>
 

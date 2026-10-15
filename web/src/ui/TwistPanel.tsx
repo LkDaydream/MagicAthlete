@@ -9,7 +9,9 @@ function fmtTime(ms: number): string {
   return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }
 
-/** 扭扭卡面板（独立）：抽卡 + 全局展示当前抽到的卡 + 抽取记录。 */
+const cardName = (index: number) => TWIST_CARDS[index % TWIST_CARDS.length]?.name ?? `#${index}`
+
+/** 扭扭卡面板（独立）：抽卡 + 全局展示 + 牌堆 / 弃牌堆 / 抽取记录。 */
 export function TwistPanel() {
   const twistCard = useGameStore((s) => s.twistCard)
   const twistRevealing = useGameStore((s) => s.twistRevealing)
@@ -17,6 +19,8 @@ export function TwistPanel() {
   const drawTwist = useGameStore((s) => s.drawTwist)
   const setTwistMode = useGameStore((s) => s.setTwistMode)
   const twistMode = useGameStore((s) => s.state?.twistMode ?? 'discard')
+  const deck = useGameStore((s) => s.state?.twistDeck ?? [])
+  const discard = useGameStore((s) => s.state?.twistDiscard ?? [])
   const players = useGameStore((s) => s.state?.players ?? [])
   const [logOpen, setLogOpen] = useState(false)
 
@@ -39,7 +43,7 @@ export function TwistPanel() {
             <option value="return">放回重洗</option>
           </select>
           <button className="twist-log-btn" onClick={() => setLogOpen(true)}>
-            记录
+            {twistMode === 'discard' ? `牌堆 ${deck.length} · 弃 ${discard.length}` : `牌堆 ${deck.length}`}
           </button>
           <button className="twist-draw" onClick={drawTwist}>
             抽扭扭卡
@@ -66,22 +70,54 @@ export function TwistPanel() {
         <div className="modal-backdrop" onClick={() => setLogOpen(false)}>
           <div className="modal dice-log" onClick={(event) => event.stopPropagation()}>
             <div className="modal-head">
-              <h3>扭扭卡记录（最近 {twistHistory.length} 次）</h3>
+              <h3>扭扭卡 · 牌堆 / 弃牌 / 记录</h3>
               <button className="link" onClick={() => setLogOpen(false)}>
                 关闭
               </button>
             </div>
-            {twistHistory.length === 0 && <div className="dice-log-empty">暂无记录</div>}
-            <div className="dice-log-list">
-              {twistHistory.map((entry, i) => (
-                <div key={i} className="dice-log-row">
-                  <span className="dl-time">{fmtTime(entry.at)}</span>
-                  <span className="dl-name">{nameOf(entry.byPlayer)}</span>
-                  <span className="dl-val">
-                    {TWIST_CARDS[entry.index % TWIST_CARDS.length]?.name ?? `#${entry.index}`}
+
+            <div className="twist-pile">
+              <div className="twist-pile-title">牌堆（剩 {deck.length} 张）</div>
+              <div className="twist-pile-list">
+                {deck.map((i) => (
+                  <span key={i} className="twist-pile-card">
+                    {cardName(i)}
                   </span>
+                ))}
+                {deck.length === 0 && <span className="twist-pile-empty">空</span>}
+              </div>
+            </div>
+
+            <div className="twist-pile">
+              <div className="twist-pile-title">
+                弃牌堆（{discard.length} 张）
+                {twistMode !== 'discard' && <span className="twist-pile-note">（当前为「放回重洗」模式，不使用弃牌堆）</span>}
+              </div>
+              <div className="twist-pile-list">
+                {discard.map((i) => (
+                  <span key={i} className="twist-pile-card">
+                    {cardName(i)}
+                  </span>
+                ))}
+                {discard.length === 0 && <span className="twist-pile-empty">空</span>}
+              </div>
+            </div>
+
+            <div className="twist-pile">
+              <div className="twist-pile-title">抽取记录（最近 {twistHistory.length} 次）</div>
+              {twistHistory.length === 0 ? (
+                <div className="dice-log-empty">暂无记录</div>
+              ) : (
+                <div className="dice-log-list">
+                  {twistHistory.map((entry, i) => (
+                    <div key={i} className="dice-log-row">
+                      <span className="dl-time">{fmtTime(entry.at)}</span>
+                      <span className="dl-name">{nameOf(entry.byPlayer)}</span>
+                      <span className="dl-val">{cardName(entry.index)}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

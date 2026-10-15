@@ -92,6 +92,8 @@ interface GameStore {
   cancelCharaDraw(): void
   nextRound(): void
   redeal(): void
+  setDealSetting(mode: 'random' | 'draft', perPlayer: number): void
+  takeCharacter(characterId: string, targetPlayerId?: string): void
   theme: string
   setTheme(theme: string): void
   leaveRoom(): void
@@ -421,6 +423,14 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     redeal() {
       socket.send('room:redeal')
+    },
+
+    setDealSetting(mode, perPlayer) {
+      socket.send('room:deal', { mode, perPlayer })
+    },
+
+    takeCharacter(characterId, targetPlayerId) {
+      socket.send('chara:take', { characterId, targetPlayerId })
     },
 
     theme: localStorage.getItem('ma_theme') ?? 'comic',

@@ -107,6 +107,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             case "chara:swap" -> onCharaSwap(session, payload);
             case "chara:cancel" -> onCharaCancel(session);
             case "room:redeal" -> onRedeal(session);
+            case "room:deal" -> onDealSetting(session, payload);
+            case "chara:take" -> onTakeCharacter(session, payload);
             case "chara:set" -> onCharaSet(session, payload);
             case "room:leave" -> onLeave(session);
             case "room:end" -> onEnd(session);
@@ -166,6 +168,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             room.setPiecesPerPlayer(piecesPerPlayer);
             room.setCharacterSet(characterSet);
             room.setDeck(catalog.shuffledIds(random, characterSet));
+            // 建房即洗好扭扭卡牌堆，保证牌堆/弃牌堆一开局就有数据
+            room.resetTwistDeck(TWIST_CARD_COUNT, random);
         } else {
             room = rooms.get(roomCode);
             if (room == null) {
@@ -182,7 +186,19 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             for (int i = 1; i <= room.getPiecesPerPlayer(); i++) {
                 room.addPiece("piece-" + playerId + "-" + i, playerId, 0);
             }
-            player.getCharacters().addAll(room.deal(CHARACTERS_PER_PLAYER));
+            if ("draft".equals(room.getDealMode())) {
+                if (!room.isDraftPoolTouched()) {
+                    // 尚未领取 → 按当前人数重建牌池（= 人数 × 每人张数）
+                    dealCharacters(room);
+                } else {
+                    // 已有领取 → 为新玩家补充其名额
+                    for (String id : room.deal(room.getCharactersPerPlayer())) {
+                        room.addToDraftPool(id);
+                    }
+                }
+            } else {
+                player.getCharacters().addAll(room.deal(room.getCharactersPerPlayer()));
+            }
         } else {
             player.setName(playerName);
             player.setConnected(true);
@@ -282,6 +298,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         msg.put("index", index);
         msg.put("byPlayer", membership.playerId());
         broadcast(room, "twist:drawn", msg);
+        // 同步牌堆 / 弃牌堆（刚抽的牌已从牌堆移入弃牌堆）
+        broadcastState(room);
     }
 
     /** 切换扭扭卡抽取模式（discard=弃牌堆 / return=放回重洗），并重置牌堆。 */
@@ -518,12 +536,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         if (room == null) {
             return;
         }
-        room.setDeck(catalog.shuffledIds(random, room.getCharacterSet()));
+        dealCharacters(room);
         room.resetRound();
-        for (Player player : room.getPlayers()) {
-            player.resetCharacters();
-            player.getCharacters().addAll(room.deal(CHARACTERS_PER_PLAYER));
-        }
         broadcastState(room);
     }
 
@@ -536,11 +550,58 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
         String set = normalizeSet(payload.path("set").asText("mixed"));
         room.setCharacterSet(set);
-        room.setDeck(catalog.shuffledIds(random, set));
+        dealCharacters(room);
         room.resetRound();
+        broadcastState(room);
+    }
+
+    /** 按房间设置重新发牌：random=每人随机发 N 张；draft=抽出 人数×N 张放入公共牌池。 */
+    private void dealCharacters(Room room) {
+        int per = room.getCharactersPerPlayer();
         for (Player player : room.getPlayers()) {
             player.resetCharacters();
-            player.getCharacters().addAll(room.deal(CHARACTERS_PER_PLAYER));
+        }
+        room.setDeck(catalog.shuffledIds(random, room.getCharacterSet()));
+        if ("draft".equals(room.getDealMode())) {
+            room.setDraftPool(room.deal(per * Math.max(1, room.getPlayers().size())));
+        } else {
+            room.setDraftPool(List.of());
+            for (Player player : room.getPlayers()) {
+                player.getCharacters().addAll(room.deal(per));
+            }
+        }
+    }
+
+    /** 设置发牌方式（random/draft）与每人张数，并立即重新发牌。 */
+    private void onDealSetting(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        room.setDealMode("draft".equals(payload.path("mode").asText()) ? "draft" : "random");
+        room.setCharactersPerPlayer(payload.path("perPlayer").asInt(room.getCharactersPerPlayer()));
+        dealCharacters(room);
+        broadcastState(room);
+    }
+
+    /** 从公共牌池领取一张角色卡（可指定领取给哪位玩家，默认自己）。 */
+    private void onTakeCharacter(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        if (room == null) {
+            return;
+        }
+        String id = payload.path("characterId").asText("");
+        Player target = room.getPlayer(payload.path("targetPlayerId").asText(membership.playerId()));
+        if (target == null) {
+            target = room.getPlayer(membership.playerId());
+        }
+        if (target == null || !room.takeFromPool(id)) {
+            return;
+        }
+        if (!target.getCharacters().contains(id)) {
+            target.getCharacters().add(id);
         }
         broadcastState(room);
     }
@@ -791,6 +852,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         view.put("round", room.getRound());
         view.put("characterSet", room.getCharacterSet());
         view.put("twistMode", room.getTwistMode());
+        view.put("twistDeck", room.getTwistDeckCards());
+        view.put("twistDiscard", room.getTwistDiscardCards());
+        view.put("charactersPerPlayer", room.getCharactersPerPlayer());
+        view.put("dealMode", room.getDealMode());
+        view.put("draftPool", room.getDraftPool());
 
         List<Map<String, Object>> players = new ArrayList<>();
         for (Player p : room.getPlayers()) {
@@ -836,6 +902,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             inPlay.addAll(p.getExtras());
             inPlay.addAll(p.getPendingDraws());
         }
+        inPlay.addAll(room.getDraftPool());
         for (String id : inPlay) {
             Character character = catalog.get(id);
             if (character != null) {
