@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore'
 
 const THEMES = [
   { id: 'comic', label: '美漫' },
-  { id: 'neon', label: '霓虹' },
+  { id: 'dark', label: '暗夜' },
   { id: 'modern', label: '现代' },
   { id: 'wood', label: '木质' },
 ]

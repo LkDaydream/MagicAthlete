@@ -1,6 +1,6 @@
 /* ============================================================
    主题化样式：所有颜色/质感走 CSS 变量，通过 <html data-theme="..."> 切换
-   主题：comic(复古美漫) / neon(暗黑霓虹) / modern(清爽现代) / wood(温馨木质)
+   主题：comic(复古美漫) / dark(暗夜) / modern(清爽现代) / wood(温馨木质)
    ============================================================ */
 
 :root {
@@ -26,7 +26,9 @@
   --chip-border: #1c1a17;
   --chip-ink: #1c1a17;
   --chip-active-bg: #ffe08a;
-  --board-bg: #fffdf5;
+  --board-bg: radial-gradient(#ece0bf 1px, transparent 1px) 0 0 / 14px 14px, #fffdf5;
+  --deco-bg: radial-gradient(circle at 50% 42%, transparent 58%, rgba(70, 46, 12, 0.16) 100%),
+    radial-gradient(rgba(28, 26, 23, 0.05) 1.6px, transparent 1.6px) 0 0 / 22px 22px;
   --board-border: #1c1a17;
   --board-shadow: 8px 8px 0 #1c1a17;
   --track-line: #e2cfa0;
@@ -50,48 +52,6 @@
   --piece-ring: #1c1a17;
 }
 
-/* ---------------------------------------------------------- 主题：暗黑霓虹 */
-[data-theme='neon'] {
-  --app-bg: radial-gradient(1200px 600px at 50% -10%, rgba(34, 211, 238, 0.12), transparent 60%),
-    radial-gradient(circle at 50% 45%, #101832, #060912 72%);
-  --ink: #e9eeff;
-  --muted: #8a93b8;
-  --line: rgba(140, 170, 255, 0.22);
-  --panel-bg: rgba(18, 24, 46, 0.78);
-  --panel-border: rgba(120, 200, 255, 0.28);
-  --panel-border-width: 1px;
-  --panel-shadow: 0 12px 34px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(120, 200, 255, 0.08);
-  --accent: #22d3ee;
-  --accent-ink: #04222b;
-  --btn-shadow: 0 0 18px rgba(34, 211, 238, 0.55);
-  --chip-bg: rgba(255, 255, 255, 0.06);
-  --chip-border: rgba(120, 200, 255, 0.3);
-  --chip-ink: #cfe0ff;
-  --chip-active-bg: rgba(34, 211, 238, 0.22);
-  --board-bg: rgba(8, 12, 26, 0.85);
-  --board-border: rgba(120, 200, 255, 0.3);
-  --board-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 30px rgba(34, 211, 238, 0.12);
-  --track-line: rgba(120, 200, 255, 0.22);
-  --cell-normal: #1b2340;
-  --cell-start: #14532d;
-  --cell-finish: #78350f;
-  --cell-star: #713f12;
-  --cell-trip: #7f1d1d;
-  --cell-fwd: #0c4a6e;
-  --cell-back: #4c1d95;
-  --cell-ink: #dbeafe;
-  --cell-stroke: rgba(120, 200, 255, 0.35);
-  --top-ink: #eaf2ff;
-  --top-muted: #8a93b8;
-  --chip-top-bg: rgba(255, 255, 255, 0.07);
-  --chip-top-border: rgba(120, 200, 255, 0.28);
-  --rb-char: #67e8f9;
-  --dice-bg: linear-gradient(180deg, #17203c, #0e1730);
-  --dice-border: rgba(120, 200, 255, 0.4);
-  --dice-ink: #eaf2ff;
-  --piece-ring: #0b1120;
-}
-
 /* ---------------------------------------------------------- 主题：清爽现代 */
 [data-theme='modern'] {
   --app-bg: linear-gradient(180deg, #eef2fb, #f7f9fd 60%);
@@ -109,7 +69,10 @@
   --chip-border: #e5e7eb;
   --chip-ink: #374151;
   --chip-active-bg: #e0e7ff;
-  --board-bg: #ffffff;
+  --board-bg: radial-gradient(#eef0f6 1px, transparent 1px) 0 0 / 16px 16px, #ffffff;
+  --deco-bg: radial-gradient(620px 320px at 6% -6%, rgba(99, 102, 241, 0.16), transparent 62%),
+    radial-gradient(680px 340px at 104% 6%, rgba(236, 72, 153, 0.12), transparent 62%),
+    radial-gradient(760px 420px at 50% 118%, rgba(34, 211, 238, 0.12), transparent 62%);
   --board-border: #e6e8ef;
   --board-shadow: 0 16px 40px rgba(17, 24, 39, 0.12);
   --track-line: #e8ebf3;
@@ -150,7 +113,9 @@
   --chip-border: #c9a97a;
   --chip-ink: #4a3a24;
   --chip-active-bg: #d7eccb;
-  --board-bg: #2f5d38;
+  --board-bg: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 4px, transparent 4px 30px), #2f5d38;
+  --deco-bg: repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.06) 0 3px, transparent 3px 24px),
+    radial-gradient(circle at 50% 40%, transparent 48%, rgba(0, 0, 0, 0.4) 100%);
   --board-border: #20150b;
   --board-shadow: 0 20px 46px rgba(0, 0, 0, 0.5);
   --track-line: #4d7a53;
@@ -174,6 +139,51 @@
   --piece-ring: #f4e7cf;
 }
 
+/* ---------------------------------------------------------- 主题：暗夜（石墨 + 琥珀） */
+[data-theme='dark'] {
+  --app-bg: radial-gradient(1000px 500px at 50% -10%, rgba(245, 158, 11, 0.1), transparent 60%),
+    linear-gradient(180deg, #17181c, #0e0f12 70%);
+  --ink: #ececf0;
+  --muted: #9a9aa6;
+  --line: rgba(255, 255, 255, 0.1);
+  --panel-bg: rgba(30, 31, 36, 0.9);
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --panel-border-width: 1px;
+  --panel-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  --accent: #f59e0b;
+  --accent-ink: #23180a;
+  --btn-shadow: 0 8px 18px rgba(245, 158, 11, 0.35);
+  --chip-bg: rgba(255, 255, 255, 0.05);
+  --chip-border: rgba(255, 255, 255, 0.12);
+  --chip-ink: #d7d7de;
+  --chip-active-bg: rgba(245, 158, 11, 0.22);
+  --board-bg: radial-gradient(circle at 50% 26%, rgba(245, 158, 11, 0.06), transparent 60%), #141519;
+  --deco-bg: radial-gradient(900px 460px at 50% -10%, rgba(245, 158, 11, 0.1), transparent 62%),
+    radial-gradient(circle at 50% 130%, rgba(0, 0, 0, 0.55), transparent 62%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 3px);
+  --board-border: rgba(255, 255, 255, 0.1);
+  --board-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  --track-line: rgba(255, 255, 255, 0.08);
+  --cell-normal: #24262c;
+  --cell-start: #14532d;
+  --cell-finish: #7c4a12;
+  --cell-star: #6b5211;
+  --cell-trip: #7f1d1d;
+  --cell-fwd: #17384f;
+  --cell-back: #3b2a55;
+  --cell-ink: #e7e7ec;
+  --cell-stroke: rgba(255, 255, 255, 0.14);
+  --top-ink: #f2f2f5;
+  --top-muted: #9a9aa6;
+  --chip-top-bg: rgba(255, 255, 255, 0.06);
+  --chip-top-border: rgba(255, 255, 255, 0.12);
+  --rb-char: #fbbf24;
+  --dice-bg: linear-gradient(180deg, #2a2c33, #1c1e23);
+  --dice-border: rgba(255, 255, 255, 0.16);
+  --dice-ink: #f2f2f5;
+  --piece-ring: #14151a;
+}
+
 /* ============================================================ 基础 */
 
 * {
@@ -193,6 +203,21 @@ body {
   background: var(--app-bg);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+}
+
+/* 主题装饰层（各主题用 --deco-bg 定制） */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--deco-bg, none);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 .app {

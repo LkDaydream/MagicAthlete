@@ -54,8 +54,6 @@ interface GameStore {
   twistModalOpen: boolean
   /** 扭扭卡是否处于“抽取动画中”（期间不剧透结果）。 */
   twistRevealing: boolean
-  /** 各玩家最近一次掷骰点数。 */
-  lastRolls: Record<string, number>
   paintMode: boolean
   armedColor: string | null
   selectedPieceId: string | null
@@ -185,7 +183,6 @@ export const useGameStore = create<GameStore>((set, get) => {
         set({
           lastDice: roll,
           diceHistory: [roll, ...get().diceHistory].slice(0, 30),
-          lastRolls: { ...get().lastRolls, [payload.playerId]: values[0] ?? 0 },
         })
         break
       }
@@ -251,7 +248,6 @@ export const useGameStore = create<GameStore>((set, get) => {
       twistHistory: [],
       twistModalOpen: false,
       twistRevealing: false,
-      lastRolls: {},
       selectedPieceId: null,
       paintMode: false,
       armedColor: null,
@@ -273,7 +269,6 @@ export const useGameStore = create<GameStore>((set, get) => {
     twistHistory: [],
     twistModalOpen: false,
     twistRevealing: false,
-    lastRolls: {},
     paintMode: false,
     armedColor: null,
     selectedPieceId: null,
