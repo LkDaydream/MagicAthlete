@@ -245,9 +245,6 @@ export function Board() {
 
   return (
     <>
-      <div className="board-caption">
-        赛道 {layout.cells.length} 格 · 起点 + {layout.cells.length - 1} 格
-      </div>
       <div className="board-wrap" ref={wrapRef} style={{ height: layout.height * scale }}>
       <div
         ref={boardRef}

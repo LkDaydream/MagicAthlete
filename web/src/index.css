@@ -194,7 +194,7 @@ html,
 body,
 #root {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
 }
 
 body {
@@ -415,7 +415,7 @@ button.primary:active {
 .room {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .room-header {
@@ -530,7 +530,7 @@ button.link {
 }
 
 .room-body {
-  flex: 1 0 auto;
+  flex: 1;
   display: flex;
   gap: 12px;
   padding: 0 12px 12px;
@@ -2026,13 +2026,23 @@ button.link {
 .board-lower .twist-panel {
   flex: 1 1 280px;
   min-width: 0;
+  max-height: 30vh;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .board-lower .scoreboard {
-  flex: 0 1 360px;
-  max-width: 360px;
+  flex: 0 1 240px;
+  max-width: 240px;
   flex-direction: column;
   align-items: stretch;
+  max-height: 30vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.board-lower .scoreboard .score-name {
+  min-width: 0;
 }
 
 .board-lower .scoreboard .score-list {
@@ -2491,6 +2501,9 @@ button.link {
   border-radius: var(--radius);
   box-shadow: var(--panel-shadow);
   padding: 10px 12px;
+  max-height: 24vh;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .racers-title {
