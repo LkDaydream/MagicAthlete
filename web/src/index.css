@@ -2015,6 +2015,36 @@ button.link {
   gap: 10px;
 }
 
+/* 扭扭卡 + 计分板 并排一行：扭扭卡变窄，计分板纵向 */
+.board-lower {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.board-lower .twist-panel {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.board-lower .scoreboard {
+  flex: 0 1 360px;
+  max-width: 360px;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.board-lower .scoreboard .score-list {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.board-lower .scoreboard .score-list li {
+  width: 100%;
+}
+
 .board-area .score-list li {
   flex: 0 0 auto;
   padding: 6px 10px;
