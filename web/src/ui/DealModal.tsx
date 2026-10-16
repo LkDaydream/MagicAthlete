@@ -17,6 +17,7 @@ export function DealModal() {
   const redeal = useGameStore((s) => s.redeal)
   const setDealSetting = useGameStore((s) => s.setDealSetting)
   const takeCharacter = useGameStore((s) => s.takeCharacter)
+  const returnCharacter = useGameStore((s) => s.returnCharacter)
 
   const perPlayer = state?.charactersPerPlayer ?? 4
   const dealMode = state?.dealMode ?? 'random'
@@ -121,6 +122,31 @@ export function DealModal() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {dealMode === 'draft' && (
+              <div className="card-section">
+                <div className="card-section-title">已领取（点卡退回牌池）</div>
+                {players.map((player) => (
+                  <div key={player.id} className="deal-taken">
+                    <span className="deal-taken-name">
+                      {player.name}（{player.characters.length}）
+                    </span>
+                    <div className="twist-pile-list">
+                      {player.characters.map((cid) => (
+                        <button
+                          key={cid}
+                          className="twist-pile-card deal-return"
+                          onClick={() => returnCharacter(cid, player.id)}
+                        >
+                          {nameOf(cid)} ↩
+                        </button>
+                      ))}
+                      {player.characters.length === 0 && <span className="twist-pile-empty">未领取</span>}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

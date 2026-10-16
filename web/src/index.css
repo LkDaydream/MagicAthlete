@@ -194,7 +194,7 @@ html,
 body,
 #root {
   margin: 0;
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -415,7 +415,7 @@ button.primary:active {
 .room {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .room-header {
@@ -530,7 +530,7 @@ button.link {
 }
 
 .room-body {
-  flex: 1;
+  flex: 1 0 auto;
   display: flex;
   gap: 12px;
   padding: 0 12px 12px;
@@ -1763,6 +1763,27 @@ button.link {
   font-size: 11px;
   line-height: 1.45;
   color: var(--muted);
+}
+
+.deal-taken {
+  margin-bottom: 6px;
+}
+
+.deal-taken-name {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.deal-return {
+  cursor: pointer;
+}
+
+.deal-return:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .char-chips {

@@ -109,6 +109,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             case "room:redeal" -> onRedeal(session);
             case "room:deal" -> onDealSetting(session, payload);
             case "chara:take" -> onTakeCharacter(session, payload);
+            case "chara:return" -> onReturnCharacter(session, payload);
             case "chara:set" -> onCharaSet(session, payload);
             case "room:leave" -> onLeave(session);
             case "room:end" -> onEnd(session);
@@ -602,6 +603,21 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
         if (!target.getCharacters().contains(id)) {
             target.getCharacters().add(id);
+        }
+        broadcastState(room);
+    }
+
+    /** 把已领取的角色卡退回公共牌池（误触撤销）。 */
+    private void onReturnCharacter(WebSocketSession session, JsonNode payload) {
+        Membership membership = memberships.get(session.getId());
+        Room room = room(membership);
+        Player target = room == null ? null
+                : room.getPlayer(payload.path("targetPlayerId").asText(membership.playerId()));
+        if (target == null) {
+            return;
+        }
+        if (target.getCharacters().remove(payload.path("characterId").asText(""))) {
+            room.addToDraftPool(payload.path("characterId").asText(""));
         }
         broadcastState(room);
     }
