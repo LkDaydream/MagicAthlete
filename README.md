@@ -35,8 +35,9 @@ java -jar target/magical-athlete-0.0.1-SNAPSHOT.jar
 #    http://localhost:8080
 ```
 
-> 前端构建产物会输出到 `src/main/resources/static`（该目录被 `.gitignore` 忽略，打包时由构建重新生成）。
+> 前端构建产物会输出到 `src/main/resources/static`（该目录被 `.gitignore` 忽略，打包时由构建重新生成）。  
 > **异地联机**：把 8080 端口通过 **Cloudflare Tunnel / frp** 等工具穿透即可（服务器为权威中继，无需"房主"在线）。
+> 具体如何使用请查看`docs/deployment` 
 
 ### 前端单独开发
 
